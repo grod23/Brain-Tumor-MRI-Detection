@@ -31,11 +31,13 @@ from sklearn.metrics import confusion_matrix
 def main():
     # Import MRI Images
 
+    # Datasets Lists
     normal = []
     glioma_tumor = []
     meningioma_tumor = []
     pituitary_tumor = []
 
+    # Read Images
     path = "./Brain_Tumor_Dataset/Normal/*.jpg"
     # Normal Image Size is 224x224
     for file in glob.iglob(path):
@@ -76,15 +78,15 @@ def main():
         image = cv2.merge([r, g, b])
         pituitary_tumor.append(image)
 
-    for img in glioma_tumor:
-        print(img.shape)
     #  Convert Lists into Numpy Arrays
     normal = np.array(normal)
     glioma = np.array(glioma_tumor)
     meningioma = np.array(meningioma_tumor)
     pituitary = np.array(pituitary_tumor)
 
-    # Tensor Shapes: (Number of Images, 224, 224, 3)
+    all_tumors = np.concatenate((glioma, meningioma, pituitary))
+    # Array Shapes: (Number of Images, 224, 224, 3)
+    print(all_tumors.shape)
 
 
 if __name__ == '__main__':
