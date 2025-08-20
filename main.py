@@ -33,6 +33,22 @@ from sklearn.metrics import confusion_matrix
 # Tumor: 2568
 # Normal: 438
 # image Shape: (224, 224, 3) 224x224, 3 Color Channels
+
+# Activation Function: ReLU
+# Optimizer: ADAM
+# Loss Function: Binary Cross Entropy
+# Pre-processing:
+# Resizing
+# Intensity Normalization
+# Grayscale Conversion
+# Noise Reduction
+# Skull Stripping
+
+# Original Dataset has these:
+# Histogram Equalization
+# Data Augmentation
+
+
 def main():
 
     # 7 images per patient. First image is original while the rest are augmented, so we will only grab the original
@@ -86,6 +102,7 @@ def main():
 
     print(f"Image tensor shape: {X.shape}")
     print(f"Label tensor shape: {y.shape}")
+    # Image tensor shape: (3096, 224, 224, 3)
 
     # Brain MRI Images Visualization
     random_index = np.random.choice(X.shape[0], 6, replace=False)
@@ -99,6 +116,9 @@ def main():
         plt.axis('off')
     plt.tight_layout()
     plt.show()
+
+    # Pre-processing
+
 
 
 if __name__ == '__main__':
