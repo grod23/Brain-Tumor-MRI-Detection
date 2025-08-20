@@ -1,5 +1,7 @@
 import numpy as np
 import glob
+import os
+import re
 # Neural Network Libraries
 import torch
 import torch.nn as nn
@@ -21,72 +23,81 @@ from sklearn.metrics import confusion_matrix
 # Crystal Clean Version: No Duplicates, Proper Labels, and Consistent Size
 # https://www.kaggle.com/datasets/mohammadhossein77/brain-tumors-dataset
 
-# 3264 Images
+# 18606 Images
 # Normal: 3066
 # Glioma: 6307
 # Meningioma: 6391
 # Pituitary: 5908
 
+# After Image Processing
+# Tumor: 2568
+# Normal: 438
 # image Shape: (224, 224, 3) 224x224, 3 Color Channels
 def main():
     # Import MRI Images
 
-    # Datasets Lists
-    normal = []
-    glioma_tumor = []
-    meningioma_tumor = []
-    pituitary_tumor = []
+    # 7 images per patient. First image is original while the rest are augmented, so we will only grab the original
+    # Every 7 images is the original
+
+    # Normal Image Size is 224x224
+    # Image Size Varies
+
+    def load_images(path):
+        images = []
+        for file in (glob.iglob(path)):
+            filename = os.path.splitext(os.path.basename(file))[0]  # e.g., 'N_1' or 'N_1_BR'
+            if re.fullmatch(r'[A-Z]_\d+', filename):  # e.g., 'N_1', 'G_2', etc.
+                image = cv2.imread(file)
+                image = cv2.resize(image, (224, 224))
+                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                images.append(image)
+
+        return np.array(images)
 
     # Read Images
-    path = "./Brain_Tumor_Dataset/Normal/*.jpg"
-    # Normal Image Size is 224x224
-    for file in glob.iglob(path):
-        image = cv2.imread(file)
-        # Ensures Color Channel order is RGB
-        b, g, r = cv2.split(image)
-        image = cv2.merge([r, g, b])
-        normal.append(image)
+    normal = load_images("./Brain_Tumor_Dataset/Normal/*.jpg")
+    glioma = load_images("./Brain_Tumor_Dataset/Tumor/glioma_tumor/*.jpg")
+    meningioma = load_images("./Brain_Tumor_Dataset/Tumor/meningioma_tumor/*.jpg")
+    pituitary = load_images("./Brain_Tumor_Dataset/Tumor/pituitary_tumor/*.jpg")
 
-    # Image Size Varies
-    path = "./Brain_Tumor_Dataset/Tumor/glioma_tumor/*.jpg"
-    for file in glob.iglob(path):
-        image = cv2.imread(file)
-        # Ensures Consistent Image Size
-        image = cv2.resize(image, (224, 224))
-        # Ensures Color Channel order is RGB
-        b, g, r = cv2.split(image)
-        image = cv2.merge([r, g, b])
-        glioma_tumor.append(image)
+    # Create tensors
+    normal = torch.tensor(normal, dtype=torch.uint8)
+    glioma = torch.tensor(glioma, dtype=torch.uint8)
+    meningioma = torch.tensor(meningioma, dtype=torch.uint8)
+    pituitary = torch.tensor(pituitary, dtype=torch.uint8)
+    # Concatenate Tumor Tensors
+    tumors = torch.cat((glioma, meningioma, pituitary), dim=0)
 
-    path = "./Brain_Tumor_Dataset/Tumor/meningioma_tumor/*.jpg"
-    for file in glob.iglob(path):
-        image = cv2.imread(file)
-        # Ensures Consistent Image Size
-        image = cv2.resize(image, (224, 224))
-        # Ensures Color Channel order is RGB
-        b, g, r = cv2.split(image)
-        image = cv2.merge([r, g, b])
-        meningioma_tumor.append(image)
-
-    pituitary_path = "./Brain_Tumor_Dataset/Tumor/pituitary_tumor/*.jpg"
-    for file in glob.iglob(pituitary_path):
-        image = cv2.imread(file)
-        # Ensures Consistent Image Size
-        image = cv2.resize(image, (224, 224))
-        # Ensures Color Channel order is RGB
-        b, g, r = cv2.split(image)
-        image = cv2.merge([r, g, b])
-        pituitary_tumor.append(image)
-
-    #  Convert Lists into Numpy Arrays
-    normal = np.array(normal)
-    glioma = np.array(glioma_tumor)
-    meningioma = np.array(meningioma_tumor)
-    pituitary = np.array(pituitary_tumor)
-
-    all_tumors = np.concatenate((glioma, meningioma, pituitary))
     # Array Shapes: (Number of Images, 224, 224, 3)
-    print(all_tumors.shape)
+    # (Number of Images, Width, Height, Color Channels)
+    # (18606, 224, 224, 3)
+
+    print(tumors.shape)
+    print(normal.shape)
+
+    # Assign 1 for tumors, 0 for normal
+    y_tumor = torch.ones(len(tumors))
+    y_normal = torch.zeros(len(normal))
+
+    # Combine data
+    X = torch.cat((normal, tumors), dim=0)
+    y = torch.cat((y_normal, y_tumor), dim=0)
+
+    print(f"Image tensor shape: {X.shape}")
+    print(f"Label tensor shape: {y.shape}")
+
+    # Brain MRI Images Visualization
+    random_index = np.random.choice(X.shape[0], 6, replace=False)
+    mri_images = [X[i] for i in random_index]
+    plt.figure(figsize=(10, 5))
+    print(random_index)
+    for i in range(6):
+        plt.subplot(2, 3, i + 1)
+        plt.imshow(mri_images[i])
+        plt.title(f"Label: {int(y[random_index[i]])}")
+        plt.axis('off')
+    plt.tight_layout()
+    plt.show()
 
 
 if __name__ == '__main__':
