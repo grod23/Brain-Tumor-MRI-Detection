@@ -34,7 +34,6 @@ from sklearn.metrics import confusion_matrix
 # Normal: 438
 # image Shape: (224, 224, 3) 224x224, 3 Color Channels
 def main():
-    # Import MRI Images
 
     # 7 images per patient. First image is original while the rest are augmented, so we will only grab the original
     # Every 7 images is the original
@@ -48,24 +47,26 @@ def main():
             filename = os.path.splitext(os.path.basename(file))[0]  # e.g., 'N_1' or 'N_1_BR'
             if re.fullmatch(r'[A-Z]_\d+', filename):  # e.g., 'N_1', 'G_2', etc.
                 image = cv2.imread(file)
+                # Ensure Consistent Image Size
                 image = cv2.resize(image, (224, 224))
+                # Ensure Consistent RGB Order
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                 images.append(image)
 
         return np.array(images)
 
-    # Read Images
+    # Load Image Arrays
     normal = load_images("./Brain_Tumor_Dataset/Normal/*.jpg")
     glioma = load_images("./Brain_Tumor_Dataset/Tumor/glioma_tumor/*.jpg")
     meningioma = load_images("./Brain_Tumor_Dataset/Tumor/meningioma_tumor/*.jpg")
     pituitary = load_images("./Brain_Tumor_Dataset/Tumor/pituitary_tumor/*.jpg")
 
-    # Create tensors
+    # Create Image Tensors
     normal = torch.tensor(normal, dtype=torch.uint8)
     glioma = torch.tensor(glioma, dtype=torch.uint8)
     meningioma = torch.tensor(meningioma, dtype=torch.uint8)
     pituitary = torch.tensor(pituitary, dtype=torch.uint8)
-    # Concatenate Tumor Tensors
+    # Combine Tumor Tensors
     tumors = torch.cat((glioma, meningioma, pituitary), dim=0)
 
     # Array Shapes: (Number of Images, 224, 224, 3)
@@ -79,7 +80,7 @@ def main():
     y_tumor = torch.ones(len(tumors))
     y_normal = torch.zeros(len(normal))
 
-    # Combine data
+    # Combine Data
     X = torch.cat((normal, tumors), dim=0)
     y = torch.cat((y_normal, y_tumor), dim=0)
 
