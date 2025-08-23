@@ -36,7 +36,17 @@ from sklearn.metrics import confusion_matrix
 
 # Activation Function: ReLU
 # Optimizer: ADAM
+
+# To Identify Tumor:
 # Loss Function: Binary Cross Entropy
+# Inputs: 1 Image
+# Outputs: 2- Normal or Tumor
+
+# To Identify Type of Tumor:
+# Loss Function: Cross Entropy
+# Inputs: 7 Images
+# Outputs: 4 - Normal, Glioma, Meningioma, Pituitary
+
 # Pre-processing:
 # Resizing
 # Intensity Normalization
@@ -44,13 +54,13 @@ from sklearn.metrics import confusion_matrix
 # Noise Reduction
 # Skull Stripping
 
+
 # Original Dataset has these:
 # Histogram Equalization
 # Data Augmentation
 
 
 def main():
-
     # 7 images per patient. First image is original while the rest are augmented, so we will only grab the original
     # Every 7 images is the original
 
@@ -105,10 +115,12 @@ def main():
     # Image tensor shape: (3096, 224, 224, 3)
 
     # Brain MRI Images Visualization
-    random_index = np.random.choice(X.shape[0], 6, replace=False)
+    random_index = np.random.choice(X.shape[0], 6, replace=False)  # Choose 6 Random Indexes for MRI Images
+    # Random Mri Images
     mri_images = [X[i] for i in random_index]
     plt.figure(figsize=(10, 5))
     print(random_index)
+    # Show Images
     for i in range(6):
         plt.subplot(2, 3, i + 1)
         plt.imshow(mri_images[i])
@@ -117,8 +129,17 @@ def main():
     plt.tight_layout()
     plt.show()
 
+    # Set: Optimizer, Loss Function, Activation Function, Train Test Validation Split
+    # Set: Epochs, Learning Rate, Batches
+    # Possibly Set: Weight Decay, Dropout Probability
+
     # Pre-processing
 
+    # Create Tensor Datasets
+
+    # Create Tensor DataLoaders
+
+    # Train
 
 
 if __name__ == '__main__':
