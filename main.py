@@ -2,17 +2,22 @@ import numpy as np
 import glob
 import os
 import re
+from model import Model
 # Neural Network Libraries
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, TensorDataset
+from torch.optim import AdamW, lr_scheduler
+
 # Computer Vision Libraries
 import cv2
 from torchvision import datasets, transforms
 from torchvision.utils import make_grid
+
 # Graphing Library
 import matplotlib.pyplot as plt
+
 # Evaluation Metrics
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
@@ -132,7 +137,15 @@ def main():
     # Set: Optimizer, Loss Function, Activation Function, Train Test Validation Split
     # Set: Epochs, Learning Rate, Batches
     # Possibly Set: Weight Decay, Dropout Probability
-
+    model = Model()
+    epochs = 1000
+    batches = 10
+    learning_rate = 0.001
+    weight_decay = 1e-4
+    loss = nn.BCEWithLogitsLoss()
+    optimizer = AdamW(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
+    # End Training Early if no longer decreasing loss
+    scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=5, factor=0.5)
     # Pre-processing
 
     # Create Tensor Datasets
