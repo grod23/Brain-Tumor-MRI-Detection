@@ -8,8 +8,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, TensorDataset
 from torch.optim import AdamW, lr_scheduler
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
 
 # Computer Vision Libraries
 import cv2
@@ -24,6 +22,7 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 
 from dataset import MRI
+
 
 # Kaggle Brain MRI Tumor Dataset
 
@@ -55,7 +54,7 @@ from dataset import MRI
 # Outputs: 4 - Normal, Glioma, Meningioma, Pituitary
 
 # Pre-processing:
-# Resizing: CHECK
+# Resizing
 # Intensity Normalization
 # Grayscale Conversion
 # Noise Reduction
@@ -105,35 +104,7 @@ def main():
     optimizer = AdamW(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
     # End Training Early if no longer decreasing loss
     scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=5, factor=0.5)
-
-    # Train Validation Test Split
-
-    # Train Test Split 80-20
-    # stratify ensures class distribution is preserved in both training and test sets. Important for imbalanced
-    # datasets like this one: (2658 Tumor, 438 Normal)
-
-    # First split: train+val and test
-    # X_temp, X_test, y_temp, y_test = train_test_split(
-    #     X, y,
-    #     test_size=0.2,
-    #     stratify=y,
-    #     random_state=42
-    # )
-    #
-    # # Second split: train and validation
-    # X_train, X_val, y_train, y_val = train_test_split(
-    #     X_temp,
-    #     y_temp,
-    #     test_size=0.2,  # 20% of 80% = 16% → final split: 64% train, 16% val, 20% test
-    #     stratify=y_temp,
-    #     random_state=42
-    # )
-
     # Pre-processing
-    scaler = StandardScaler()
-    # scaler.fit_transform(X_train)
-    # scaler.transform(X_val)
-    # scaler.transform(X_test)
 
     # Create Tensor Datasets
     # train_dataset = TensorDataset(X_train, y_train)
