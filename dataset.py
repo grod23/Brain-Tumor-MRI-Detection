@@ -23,7 +23,7 @@ def collect_image_paths():
 
     def get_images(path, label):
         for file in (glob.iglob(path)):
-            filename = os.path.splitext(os.path.basename(file))[0]  # e.g., 'N_1' or 'N_1_BR'
+            # filename = os.path.splitext(os.path.basename(file))[0]  # e.g., 'N_1' or 'N_1_BR'
             #if re.fullmatch(r'[A-Z]_\d+', filename):  # e.g., 'N_1', 'G_2', etc
             image_paths.append(file)
             labels.append(label)
@@ -56,9 +56,27 @@ class MRI(Dataset):
 
         # Load Image on Demand
         image = cv2.imread(image_path)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        image = Image.fromarray(image)
-        image = self.transform(image)
 
+        # Preprocessing
+
+        # Ensure Consistent RGB
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # Convert to PIL Image
+        image = Image.fromarray(image)
+        # Gray Scale Conversion
+        # image = image.convert("L")  # PIL grayscale
+        # Normalize and Resize
+        image = self.transform(image)
+        # Noise Reduction
+        # Skull Stripping
+        # Intensity Normalization
+        # CLAHE (Adaptive Histogram Equalization)
         return image, label
 
+    # Data Augmentation already included in DataSet:
+
+    # Salt and Pepper Noise: Introducing random noise by setting pixels to white or black based on a specified intensity.
+    # Histogram Equalization: Applying histogram equalization to enhance the contrast and details in the images.
+    # Rotation: Rotating the images clockwise or counterclockwise by a specified angle.
+    # Brightness Adjustment: Modifying the brightness of the images by adding or subtracting intensity values.
+    # Horizontal and Vertical Flipping: Flipping the images horizontally or vertically to create mirror images.

@@ -60,19 +60,6 @@ from dataset import MRI, collect_image_paths
 # Inputs: 7 Images
 # Outputs: 4 - Normal, Glioma, Meningioma, Pituitary
 
-# Pre-processing:
-# Resizing
-# Intensity Normalization
-# Grayscale Conversion
-# Noise Reduction
-# Skull Stripping
-
-
-# Original Dataset has these:
-# Histogram Equalization
-# Data Augmentation
-
-
 def main():
     # print("CUDA Available:", torch.cuda.is_available())
     # print("Device Name:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "No GPU"
@@ -102,8 +89,9 @@ def main():
     test_dataset = MRI(X_test, y_test)
 
     # Create DataLoaders
-    training_loader = DataLoader(train_dataset, batch_size=32, num_workers=4, shuffle=True)
+
     # num_workers specify how many parallel subprocesses are used to load the data
+    training_loader = DataLoader(train_dataset, batch_size=32, num_workers=4, shuffle=True)
     validation_loader = DataLoader(validation_dataset, batch_size=32, num_workers=4, shuffle=False)
     testing_loader = DataLoader(test_dataset, batch_size=32, num_workers=4, shuffle=False)
 
@@ -122,6 +110,7 @@ def main():
         plt.axis('off')
     plt.tight_layout()
     plt.show()
+
 
 
 if __name__ == '__main__':
