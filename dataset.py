@@ -19,6 +19,7 @@ class MRI(Dataset):
         self.transform = transforms.Compose([transforms.Resize((224, 224)),
                                              transforms.ToTensor()
                                              ])
+
         # Normal Image Size is 224x224
         # Image Size Varies
         # Load Image Tensors
