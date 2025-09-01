@@ -1,12 +1,9 @@
 import glob
-import os
-import re
 import cv2
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from PIL import Image
-import numpy as np
 
 
 
@@ -23,8 +20,6 @@ def collect_image_paths():
 
     def get_images(path, label):
         for file in (glob.iglob(path)):
-            # filename = os.path.splitext(os.path.basename(file))[0]  # e.g., 'N_1' or 'N_1_BR'
-            #if re.fullmatch(r'[A-Z]_\d+', filename):  # e.g., 'N_1', 'G_2', etc
             image_paths.append(file)
             labels.append(label)
 
@@ -37,12 +32,17 @@ def collect_image_paths():
     # Return Image Paths and Corresponding Labels
     return image_paths, torch.tensor(labels, dtype=torch.float32)
 
+def z_score_normalization(image):
+    # Image Tensor
+    mean = image.mean()
+    sd = image.std()
+    return (image - mean) / sd
 
 class MRI(Dataset):
     def __init__(self, image_paths, labels):
         self.image_paths = image_paths
         self.labels = labels
-        # Normalize, Resize, and Adjust Tensor Shape
+        # Min-Max Normalization, Resize, and Adjust Tensor Shape
         self.transform = transforms.Compose([transforms.Resize((224, 224)),
                                              transforms.ToTensor()
                                              ])
@@ -50,27 +50,26 @@ class MRI(Dataset):
     def __len__(self):
         return len(self.image_paths)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index, testing=False):
         image_path = self.image_paths[index]
         label = self.labels[index]
 
         # Load Image on Demand
-        image = cv2.imread(image_path)
+        image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
 
         # Preprocessing
 
-        # Ensure Consistent RGB
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # Histogram Equalization
+        image = cv2.equalizeHist(image)
         # Convert to PIL Image
         image = Image.fromarray(image)
-        # Gray Scale Conversion
-        # image = image.convert("L")  # PIL grayscale
         # Normalize and Resize
         image = self.transform(image)
-        # Noise Reduction
-        # Skull Stripping
-        # Intensity Normalization
-        # CLAHE (Adaptive Histogram Equalization)
+        # Z-Score Normalization
+        image = z_score_normalization(image)
+
+        # For testing:
+        # No augmented images
         return image, label
 
     # Data Augmentation already included in DataSet:
@@ -80,3 +79,28 @@ class MRI(Dataset):
     # Rotation: Rotating the images clockwise or counterclockwise by a specified angle.
     # Brightness Adjustment: Modifying the brightness of the images by adding or subtracting intensity values.
     # Horizontal and Vertical Flipping: Flipping the images horizontally or vertically to create mirror images.
+
+    # Image Preprocessing Notes:
+
+    # For Robustness: Data Augmentation Examples Above
+    # Data Augmentation should be used for TRAINING only. Using augmented images in validation and testing sets may
+    # cause overfitting and unreliable accuracy.
+
+    # Standardization(Z-Score Normalization): (X - mean(X)/ SD(X)): - Centers data around 0 with unit variance
+    # Improves convergence. Without, optimization may have unwanted oscillations during convergence. Required for MRI
+
+    # Min-Max Normalization: Scales data point values to be between [0,1]. Typically, not required for MRI, Z-Score
+    # Normalization would be more important
+
+    # Histogram: Visual representation of quantitative data distribution
+    # Histogram Equalization adjusts the contrast of an image by adjusting histogram to be uniform throughout.
+
+    # Noise Reduction: Removes distortions, grains, speckles while keeping
+    # important detail and clarity(Use for testing only)
+
+    # Skull Stripping: Strong potential only if every image model sees is in this format. For deployment,
+    # every image must also be preprocessed with Skull Stripping.
+
+    # Intensity Normalization: MRI intensities are not standardized. The same tissue can appear with a different
+    # brightness. Intensity Normalization brings the intensities to a common scale in order to separate tissue and
+    # segment the brain. For deployment, every image must also be preprocessed with Intensity Normalization.
