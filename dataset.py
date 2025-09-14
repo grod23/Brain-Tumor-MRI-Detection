@@ -1,10 +1,15 @@
+# File Handling
 import glob
+import os.path
+import re
+
 import cv2
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
-from PIL import Image
-
+from torchvision.transforms import functional as F
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 # Download latest version
@@ -12,16 +17,45 @@ from PIL import Image
 
 # Normal Image Size is 224x224
 # Image Size Varies
-# 7 images per patient. First image is original while the rest are augmented, so we will only grab the original
+# 7 images per patient. First image is original while the rest are augmented
 # Every 7 images is the original
 def collect_image_paths():
     image_paths = []
     labels = []
 
+    # Gets the File Number in order to sort numerically
+    def extract_number(file_name):
+        match = re.search(r'\d+', file_name)
+        return int(match.group())
+
     def get_images(path, label):
-        for file in (glob.iglob(path)):
-            image_paths.append(file)
-            labels.append(label)
+        # Image Paths for Specific Patient
+        patient_image_paths = []
+        previous_base_name = ' '
+
+        # Sort Files Numerically
+        files = glob.iglob(path)
+        files = sorted(files, key=extract_number)
+
+        # Loop and Categorize Images by Patient
+        for file in files:
+            file_name = os.path.basename(file).removesuffix('.jpg')
+            parts = file_name.split('_')
+            base_name = '_'.join(parts[0:2])
+            # If Base Name Matches Previous Base Name
+            if base_name == previous_base_name:
+                # Add to Patient Array
+                patient_image_paths.append(file)
+            else:
+                # Append Patient Image Paths
+                image_paths.append(patient_image_paths)
+                # Reset Patient Image Paths
+                patient_image_paths.clear()
+                # Append First File Image to New Patient Image Path List
+                patient_image_paths.append(file)
+                # Set New Previous Base Name
+                previous_base_name = base_name
+                labels.append(label)
 
     # Load Image Paths
     get_images("./Brain_Tumor_Dataset/Normal/*.jpg", 0)
@@ -30,27 +64,44 @@ def collect_image_paths():
     get_images("./Brain_Tumor_Dataset/Tumor/pituitary_tumor/*.jpg", 1)
 
     # Return Image Paths and Corresponding Labels
-    return image_paths, torch.tensor(labels, dtype=torch.float32)
+    # print(f'Image Path Length: {len(image_paths)}')
+    # print(f'Lengh of Labels: {len(labels)}')
+    return np.array(image_paths), torch.tensor(labels, dtype=torch.float32)
 
-def z_score_normalization(image):
-    # Image Tensor
-    mean = image.mean()
-    sd = image.std()
-    return (image - mean) / sd
+def compute(image_paths):
+    pixel_values = []
+
+    for path in image_paths:
+        # Read grayscale image as float32 in range [0, 1]
+        img = cv2.imread(path, cv2.IMREAD_GRAYSCALE).astype(np.float32) / 255.0
+        pixel_values.append(img.flatten())
+
+    # Concatenate all pixels from all images
+    all_pixels = np.concatenate(pixel_values)
+
+    mean = np.mean(all_pixels)
+    std = np.std(all_pixels)
+
+    return mean, std
+
+
 
 class MRI(Dataset):
-    def __init__(self, image_paths, labels):
+    def __init__(self, image_paths, labels, testing=False):
         self.image_paths = image_paths
         self.labels = labels
-        # Min-Max Normalization, Resize, and Adjust Tensor Shape
-        self.transform = transforms.Compose([transforms.Resize((224, 224)),
-                                             transforms.ToTensor()
+        # Resize, Adjust Tensor Shape, Min-Max Normalization, Z-Score Normalization
+        self.transform = transforms.Compose([transforms.ToPILImage(),
+                                             transforms.Resize((224, 224)),
+                                             transforms.ToTensor(),
+                                             transforms.Normalize(mean=[0.1891], std=[0.1936])
                                              ])
+        self.testing = testing
 
     def __len__(self):
         return len(self.image_paths)
 
-    def __getitem__(self, index, testing=False):
+    def __getitem__(self, index):
         image_path = self.image_paths[index]
         label = self.labels[index]
 
@@ -60,13 +111,18 @@ class MRI(Dataset):
         # Preprocessing
 
         # Histogram Equalization
-        image = cv2.equalizeHist(image)
-        # Convert to PIL Image
-        image = Image.fromarray(image)
+        # image = cv2.equalizeHist(image)
         # Normalize and Resize
         image = self.transform(image)
-        # Z-Score Normalization
-        image = z_score_normalization(image)
+
+        if self.testing:
+            image = image.numpy()
+
+            # Noise Reduction:
+            # For Salt and Pepper Noise
+            image = cv2.medianBlur(image, 3) # Kernel Size must be odd
+            # Bilateral Filter to smooth preserve edges very well
+            image = cv2.bilateralFilter(image, d=3, sigmaColor=10, sigmaSpace=10)
 
         # For testing:
         # No augmented images
@@ -88,6 +144,7 @@ class MRI(Dataset):
 
     # Standardization(Z-Score Normalization): (X - mean(X)/ SD(X)): - Centers data around 0 with unit variance
     # Improves convergence. Without, optimization may have unwanted oscillations during convergence. Required for MRI
+    # Preferred when outliers are present
 
     # Min-Max Normalization: Scales data point values to be between [0,1]. Typically, not required for MRI, Z-Score
     # Normalization would be more important

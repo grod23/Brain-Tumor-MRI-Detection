@@ -16,8 +16,8 @@ class Model(nn.Module):
 
         self.conv1 = nn.Conv2d(self.input_features, input1, self.conv_kernel, self.pooling_stride)
         self.conv2 = nn.Conv2d(self.input1, output, self.conv_kernel, self.pooling_stride)
-        self.fc1 = nn.Linear(self.input_features, self.input1)
-        self.fc2 = nn.Linear(self.input1, output)
+        self.fc1 = nn.Linear(10816, 120)
+        self.fc2 = nn.Linear(120, output)
 
     def forward(self, X):
         X = F.relu(self.conv1(X))
@@ -25,7 +25,14 @@ class Model(nn.Module):
         X = F.relu(self.conv2(X))
         X = F.max_pool2d(X, self.pooling_kernel, self.pooling_stride)
         # Flatten
-        # X.view()
+        X = X.view(-1, 10816)
+        # Fully Connected Layers
+        X = F.relu(self.fc1(X))
+        # No Activation Function for last layer
+        X = self.fc2(X)
+        # Apply to convert to probability
+        X = F.log_softmax(X, dim=1)
 
+        return X
 
 
