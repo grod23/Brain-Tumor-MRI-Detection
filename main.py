@@ -71,7 +71,7 @@ def main():
     batches = 10
     learning_rate = 0.001
     weight_decay = 1e-4
-    loss_fn = nn.BCEWithLogitsLoss()
+    loss_fn = nn.CrossEntropyLoss()
     # Couples with Weight Decay
     optimizer = AdamW(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
     # End Training Early if no longer decreasing loss
@@ -144,7 +144,7 @@ def main():
     # Brain MRI Images Visualization
     y = y.repeat_interleave(X.shape[1])
     X = X.reshape(-1)
-    dataset = MRI(X, y, testing=False)
+    dataset = MRI(X, y, testing=True)
 
     # replace=False avoids duplicates values
     random_index = np.random.choice(len(X), 6, replace=False)  # Choose 6 Random Indexes for MRI Images
@@ -163,7 +163,6 @@ def main():
     plt.show()
 
     # Histogram Plot
-
     plt.figure(figsize=(10, 9))  # Wider and taller figure
 
     for i in range(3):

@@ -4,35 +4,38 @@ import torch.nn.functional as F
 
 # Input = 1 Image, Output = 2(Tumor or Normal MRI)
 class Model(nn.Module):
-    def __init__(self, input_features=1, input1=16, output=2):
+    def __init__(self):
         super(Model, self).__init__()
-        self.input_features = input_features
-        self.input1 = input1
-        self.output = output
-        self.conv_kernel = 3
-        self.conv_stride = 1
-        self.pooling_kernel = 2
-        self.pooling_stride = 2
-
-        self.conv1 = nn.Conv2d(self.input_features, input1, self.conv_kernel, self.pooling_stride)
-        self.conv2 = nn.Conv2d(self.input1, output, self.conv_kernel, self.pooling_stride)
-        self.fc1 = nn.Linear(10816, 120)
-        self.fc2 = nn.Linear(120, output)
+        self.cnn = nn.Sequential(
+            # Input Image Shape: (1, 224, 224) GrayScale
+            nn.Conv2d(in_channels=3, out_channels=6, kernel_size=3),
+            nn.Tanh(),
+            nn.MaxPool2d(kernel_size=3, stride=2),
+            nn.Conv2d(in_channels=6, out_channels=16, kernel_size=3),
+            nn.Tanh(),
+            nn.MaxPool2d(kernel_size=3, stride=2)
+        )
+        self.fc_layer = nn.Sequential(
+            nn.Linear(in_features=256, out_features=120),
+            nn.Tanh(),
+            nn.Linear(in_features=120, out_features=84),
+            nn.Tanh(),
+            # 4 Predictions: Normal, Glioma, Meningioma, Pituitary
+            nn.Linear(in_features=84, out_features=4)
+        )
 
     def forward(self, X):
-        X = F.relu(self.conv1(X))
-        X = F.max_pool2d(X, self.pooling_kernel, self.pooling_stride)
-        X = F.relu(self.conv2(X))
-        X = F.max_pool2d(X, self.pooling_kernel, self.pooling_stride)
-        # Flatten
-        X = X.view(-1, 10816)
-        # Fully Connected Layers
-        X = F.relu(self.fc1(X))
-        # No Activation Function for last layer
-        X = self.fc2(X)
-        # Apply to convert to probability
-        X = F.log_softmax(X, dim=1)
-
+        X = self.cnn(X)
+        X = X.view(X.size(0), -1)
+        X = self.fc_layer(X)
         return X
 
+
+# Model Formats:
+
+# UNET:
+# Designed for biomedical imaging with small datasets
+
+# YOLOv8(YOU ONLY LOOK ONCE)
+# Strong object detection
 

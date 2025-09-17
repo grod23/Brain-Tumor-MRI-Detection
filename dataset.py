@@ -5,10 +5,8 @@ import re
 
 import cv2
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 from torchvision import transforms
-from torchvision.transforms import functional as F
-import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -46,22 +44,24 @@ def collect_image_paths():
             if base_name == previous_base_name:
                 # Add to Patient Array
                 patient_image_paths.append(file)
+
             else:
-                # Append Patient Image Paths
-                image_paths.append(patient_image_paths)
+                # Append Patient Image Paths if it's not empty
+                if patient_image_paths:
+                    image_paths.append(patient_image_paths)
+                    labels.append(label)
                 # Reset Patient Image Paths
                 patient_image_paths.clear()
                 # Append First File Image to New Patient Image Path List
                 patient_image_paths.append(file)
                 # Set New Previous Base Name
                 previous_base_name = base_name
-                labels.append(label)
 
     # Load Image Paths
     get_images("./Brain_Tumor_Dataset/Normal/*.jpg", 0)
     get_images("./Brain_Tumor_Dataset/Tumor/glioma_tumor/*.jpg", 1)
-    get_images("./Brain_Tumor_Dataset/Tumor/meningioma_tumor/*.jpg", 1)
-    get_images("./Brain_Tumor_Dataset/Tumor/pituitary_tumor/*.jpg", 1)
+    get_images("./Brain_Tumor_Dataset/Tumor/meningioma_tumor/*.jpg", 2)
+    get_images("./Brain_Tumor_Dataset/Tumor/pituitary_tumor/*.jpg", 3)
 
     # Return Image Paths and Corresponding Labels
     # print(f'Image Path Length: {len(image_paths)}')
@@ -110,22 +110,25 @@ class MRI(Dataset):
 
         # Preprocessing
 
-        # Histogram Equalization
-        # image = cv2.equalizeHist(image)
-        # Normalize and Resize
-        image = self.transform(image)
+        # Histogram Equalizationbw
+        image = cv2.equalizeHist(image)
 
         if self.testing:
-            image = image.numpy()
+            # image = image.numpy()
 
             # Noise Reduction:
             # For Salt and Pepper Noise
-            image = cv2.medianBlur(image, 3) # Kernel Size must be odd
+            image = cv2.medianBlur(image, 3)  # Kernel Size must be odd
+
             # Bilateral Filter to smooth preserve edges very well
             image = cv2.bilateralFilter(image, d=3, sigmaColor=10, sigmaSpace=10)
 
-        # For testing:
-        # No augmented images
+            # For testing:
+            # No augmented images
+
+        # Normalize and Resize
+        image = self.transform(image)
+
         return image, label
 
     # Data Augmentation already included in DataSet:
