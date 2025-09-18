@@ -67,6 +67,7 @@ def main():
     # print("Device Name:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "No GPU"
 
     model = Model()
+
     epochs = 1000
     batches = 10
     learning_rate = 0.001

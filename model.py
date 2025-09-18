@@ -2,34 +2,38 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-# Input = 1 Image, Output = 2(Tumor or Normal MRI)
 class Model(nn.Module):
     def __init__(self):
         super(Model, self).__init__()
+        # Image Shape: (Batch Size, Channels, Height, Width) = (32, 1, 224, 224) Gray Scale.
         self.cnn = nn.Sequential(
-            # Input Image Shape: (1, 224, 224) GrayScale
-            nn.Conv2d(in_channels=3, out_channels=6, kernel_size=3),
+            nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5),
+            # nn.BatchNorm2d(6),
             nn.Tanh(),
-            nn.MaxPool2d(kernel_size=3, stride=2),
-            nn.Conv2d(in_channels=6, out_channels=16, kernel_size=3),
+            nn.MaxPool2d(kernel_size=2, stride=5),
+
+            nn.Conv2d(in_channels=6, out_channels=16, kernel_size=5),
+            # nn.BatchNorm2d(16),
             nn.Tanh(),
-            nn.MaxPool2d(kernel_size=3, stride=2)
+            nn.MaxPool2d(kernel_size=2, stride=5)
         )
         self.fc_layer = nn.Sequential(
+            nn.Linear(in_features=1024, out_features=256),
+            # nn.BatchNorm2d(246),
+            nn.Tanh(),
             nn.Linear(in_features=256, out_features=120),
+            # nn.BatchNorm2d(120),
             nn.Tanh(),
-            nn.Linear(in_features=120, out_features=84),
-            nn.Tanh(),
-            # 4 Predictions: Normal, Glioma, Meningioma, Pituitary
-            nn.Linear(in_features=84, out_features=4)
+            # 4 Predictions: Normal, Glioma, Meningioma, Pituitary.
+            nn.Linear(in_features=120, out_features=4)
         )
 
     def forward(self, X):
         X = self.cnn(X)
+        # X.size(0) grabs first value of size which is batch size or how many images.
         X = X.view(X.size(0), -1)
         X = self.fc_layer(X)
         return X
-
 
 # Model Formats:
 
