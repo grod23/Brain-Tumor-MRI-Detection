@@ -144,6 +144,22 @@ def main():
             print(f'Training Epoch: {epoch}, Loss: {train_loss}')
         sys.exit()
 
+    # Visualizing Feature Maps
+    num_layers = 0
+    conv_layers = []
+    # List of the 2 sequential objects in model (nn.Sequential)
+    model_children = list(model.children())
+
+    for child in model_children:
+        # Checks for typy Sequential
+        if type(child) == nn.Sequential:
+            # Want to visualize the child of model_children
+            for layer in child.children():
+                # If it's a Convolutional Layer
+                if type(layer) == nn.Conv2d:
+                    # Record This Layer
+                    num_layers += 1
+                    conv_layers.append(layer)
 
 
     # Brain MRI Images Visualization
