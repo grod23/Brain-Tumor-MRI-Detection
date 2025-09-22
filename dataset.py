@@ -5,6 +5,7 @@ import re
 
 import cv2
 import torch
+from sklearn.model_selection import train_test_split
 from torch.utils.data import Dataset
 from torchvision import transforms
 import numpy as np
@@ -63,10 +64,54 @@ def collect_image_paths():
     get_images("./Brain_Tumor_Dataset/Tumor/meningioma_tumor/*.jpg", 2)
     get_images("./Brain_Tumor_Dataset/Tumor/pituitary_tumor/*.jpg", 3)
 
-    # Return Image Paths and Corresponding Labels
-    # print(f'Image Path Length: {len(image_paths)}')
-    # print(f'Lengh of Labels: {len(labels)}')
     return np.array(image_paths), torch.LongTensor(labels)
+
+def get_original(patients):
+    # Original Image Paths
+    original = []
+
+    # Original will be in format 'Letter_Number'
+    for patient in patients:
+        # First image is always the original
+        original_image = patient[0]
+        original.append(original_image)
+
+    return original
+
+def get_data_split(image_paths, labels):
+    # Split Image Paths into Training, Validation, and Testing
+    # Preserve Class Distribution using stratify
+    X_temp, X_test, y_temp, y_test = train_test_split(image_paths, labels, test_size=0.2, stratify=labels,
+                                                      random_state=42)
+    X_train, X_val, y_train, y_val = train_test_split(X_temp, y_temp, test_size=0.2, stratify=y_temp, random_state=42)
+
+    # Unravel Data Array, No Longer Need Patient Array now that data is split. No risk of data leakage
+
+    # Add Necessary Labels for Unraveled Training Patient Data
+    y_train = y_train.repeat_interleave(X_train.shape[1])
+    # Unravel Training Patient Data
+    X_train = X_train.reshape(-1)
+
+    # Remove all augmented images from X Test and X Validation
+    X_val, X_test = get_original(X_val), get_original(X_test)
+
+    # print(f'X Train Length: {len(X_train)}')
+    # print(f'Y Train Length: {len(y_train)}')
+    # print(f'X Validation Length: {len(X_val)}')
+    # print(f'Y Validation Length: {len(y_val)}')
+    # print(f'X Test Length: {len(X_test)}')
+    # print(f'Y Test Length: {len(y_test)}')
+    #
+    # for i in range(len(X_train)):
+    #     print(f'File Name: {X_train[i]}, Label: {y_train[i]}')
+
+    # Normal: 0
+    # Glioma: 1
+    # Meningioma: 2
+    # Pituitary: 3
+
+    return np.array(X_train), torch.LongTensor(y_train), np.array(X_val), torch.LongTensor(y_val), np.array(
+        X_test), torch.LongTensor(y_val),
 
 def compute(image_paths):
     pixel_values = []

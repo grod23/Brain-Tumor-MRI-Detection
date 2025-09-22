@@ -6,8 +6,6 @@ import os
 import re
 import sys
 from sklearn.model_selection import train_test_split
-from sympy.functions.special.hyper import HyperRep_power1
-from sympy.vector import gradient
 
 from model import Model
 # Neural Network Libraries
@@ -30,7 +28,7 @@ from tqdm import tqdm
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 
-from dataset import MRI, collect_image_paths
+from dataset import MRI, collect_image_paths, get_data_split
 
 
 # Kaggle Brain MRI Tumor Dataset
@@ -80,22 +78,8 @@ def main():
     scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=5, factor=0.5)
 
     X, y = collect_image_paths()
-    # 21672 Images
-
-    # Train Validation Test Split
-
-    # Preserve Class Distribution using stratify
-    X_temp, X_test, y_temp, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
-    X_train, X_val, y_train, y_val = train_test_split(X_temp, y_temp, test_size=0.2, stratify=y_temp, random_state=42)
-
-    # Unravel Data Array, No Longer Need Patient Array now that data is split. No risk of data leakage
-    y_train = y_train.repeat_interleave(X_train.shape[1])
-    y_val = y_val.repeat_interleave(X_val.shape[1])
-    y_test = y_test.repeat_interleave(X_test.shape[1])
-
-    X_train = X_train.reshape(-1)
-    X_val = X_val.reshape(-1)
-    X_test = X_test.reshape(-1)
+    # Get Train Val Test Split
+    X_train, y_train, X_val, y_val, X_test, y_test = get_data_split(X, y)
 
     # Create DataSet Instances
     train_dataset = MRI(X_train, y_train)
@@ -114,22 +98,21 @@ def main():
 
     # Loss Tracking
     loss_track = []
-    print(len(training_loader))
-    print(len(validation_loader))
-    print(len(testing_loader))
 
     model.train()
     for epoch in range(epochs):
         epoch_loss = 0.0
         for X_batch, y_batch in training_loader:
+            print('Next Batch')
+
             # Use GPU
 
             # Reset Gradients
             optimizer.zero_grad()
             # Get y_hat
             y_predicted = model(X_batch)
-            print(f'Prediction: {y_predicted.argmax(dim=1)}')
-            print(f'Label: {y_batch}')
+            # print(f'Prediction: {y_predicted.argmax(dim=1)}')
+            # print(f'Label: {y_batch}')
             # Get Loss
             loss = loss_fn(y_predicted, y_batch) # y_batch must be of type LongTensor()
             # Backpropagation
@@ -161,13 +144,34 @@ def main():
                     num_layers += 1
                     conv_layers.append(layer)
 
+    print(conv_layers)
+    y = y.repeat_interleave(X.shape[1])
+    X = X.reshape(-1)
+    dataset = MRI(X, y, testing=False)
+    image, label = dataset.__getitem__(3233)
+    print(label)
+    print(image.unsqueeze(0).shape)
+    plt.imshow(image.view(image.shape[2], image.shape[1], image.shape[0]))
+    plt.show()
+    image = image.unsqueeze(0)
+    results = [conv_layers[0](image)]
+    for i in range(1, len(conv_layers)):
+        # Input for next layer is output of last layer
+        results.append(conv_layers[i](results[-1]))
+    print(results[0].shape)
+
+    # Visualize
+    for layer in range(len(results)):
+        plt.figure(figsize=(30, 10))
+        layer_viz = results[layer].squeeze()
+        for i, f in enumerate(layer_viz):
+            plt.subplot(2, 8, i + 1)
+            plt.imshow(f.detach().numpy())
+            plt.axis('off')
+        plt.show()
 
     # Brain MRI Images Visualization
 
-    # y = y.repeat_interleave(X.shape[1])
-    # X = X.reshape(-1)
-    # dataset = MRI(X, y, testing=True)
-    #
     # # replace=False avoids duplicates values
     # random_index = np.random.choice(len(X), 6, replace=False)  # Choose 6 Random Indexes for MRI Images
     # plt.figure(figsize=(10, 5))
