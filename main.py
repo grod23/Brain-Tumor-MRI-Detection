@@ -4,14 +4,15 @@ from PIL import Image
 import glob
 import os
 import re
-
+import sys
 from sklearn.model_selection import train_test_split
+from sympy.functions.special.hyper import HyperRep_power1
+from sympy.vector import gradient
 
 from model import Model
 # Neural Network Libraries
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torch.optim import AdamW, lr_scheduler
 
@@ -63,13 +64,13 @@ from dataset import MRI, collect_image_paths
 # Outputs: 4 - Normal, Glioma, Meningioma, Pituitary
 
 def main():
-    # print("CUDA Available:", torch.cuda.is_available())
-    # print("Device Name:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "No GPU"
+    print("CUDA Available:", torch.cuda.is_available())
+    print("Device Name:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "No GPU")
 
     model = Model()
 
-    epochs = 1000
-    batches = 10
+    epochs = 100
+    batches = 32
     learning_rate = 0.001
     weight_decay = 1e-4
     loss_fn = nn.CrossEntropyLoss()
@@ -93,7 +94,7 @@ def main():
     y_test = y_test.repeat_interleave(X_test.shape[1])
 
     X_train = X_train.reshape(-1)
-    X_val =X_val.reshape(-1)
+    X_val = X_val.reshape(-1)
     X_test = X_test.reshape(-1)
 
     # Create DataSet Instances
@@ -103,9 +104,9 @@ def main():
 
 
     # Create DataLoaders
-    training_loader = DataLoader(train_dataset, batch_size=32, num_workers=4, shuffle=True) # Only Shuffle Training Data
-    validation_loader = DataLoader(validation_dataset, batch_size=32, num_workers=4, shuffle=False)
-    testing_loader = DataLoader(test_dataset, batch_size=32, num_workers=4, shuffle=False)
+    training_loader = DataLoader(train_dataset, batch_size=batches, num_workers=4, shuffle=True) # Only Shuffle Training Data
+    validation_loader = DataLoader(validation_dataset, batch_size=batches, num_workers=4, shuffle=False)
+    testing_loader = DataLoader(test_dataset, batch_size=batches, num_workers=4, shuffle=False)
     # Num_workers specify how many parallel subprocesses are used to load the data
     # DataLoaders also add Batch Size to Shape: (32, 1, 224, 224)
 
@@ -113,80 +114,84 @@ def main():
 
     # Loss Tracking
     loss_track = []
-    # Patience Counter for Early Stopping
-    patience_counter = 0
+    print(len(training_loader))
+    print(len(validation_loader))
+    print(len(testing_loader))
 
-    # model.train()
-    # for epoch in range(epochs):
-    #     epoch_loss = 0.0
-    #     best_loss = 0.0
-    #     for X_batch, y_batch in training_loader:
-    #         y_predicted = model(X_batch)
-    #         loss = loss_fn(y_predicted, y_batch)
-    #         # Reset Gradients
-    #         optimizer.zero_grad()
-    #         # Backpropagation
-    #         loss.backward()
-    #         # Update Parameters
-    #         optimizer.step()
-    #         # Track Epoch Loss
-    #         epoch_loss += loss.item()
-    #     test_loss = epoch_loss / len(training_loader)
-    #     loss_track.append(test_loss)
-    #     scheduler.step(test_loss)
-    #
-    #     if test_loss < best_loss:
-    #         patience_counter = 0
-    #     else:
-    #         patience_counter += 1
-    #         if patience_counter >= 10:
-    #             print(f'Early Stopping: {}')
+    model.train()
+    for epoch in range(epochs):
+        epoch_loss = 0.0
+        for X_batch, y_batch in training_loader:
+            # Use GPU
+
+            # Reset Gradients
+            optimizer.zero_grad()
+            # Get y_hat
+            y_predicted = model(X_batch)
+            print(f'Prediction: {y_predicted.argmax(dim=1)}')
+            print(f'Label: {y_batch}')
+            # Get Loss
+            loss = loss_fn(y_predicted, y_batch) # y_batch must be of type LongTensor()
+            # Backpropagation
+            loss.backward()
+            # Update Learnable Parameters
+            optimizer.step()
+            # Update Epoch Loss
+            epoch_loss += loss.item()
+
+        train_loss = epoch_loss / len(training_loader)
+        if epoch % 10 == 0:
+            print(f'Training Epoch: {epoch}, Loss: {train_loss}')
+        sys.exit()
+
+
 
     # Brain MRI Images Visualization
-    y = y.repeat_interleave(X.shape[1])
-    X = X.reshape(-1)
-    dataset = MRI(X, y, testing=True)
 
-    # replace=False avoids duplicates values
-    random_index = np.random.choice(len(X), 6, replace=False)  # Choose 6 Random Indexes for MRI Images
-    plt.figure(figsize=(10, 5))
-    # print(f'Random Index: {random_index}')
-    # Show Images
-    for i in range(6):
-        image, label = dataset[random_index[i]]
-        image = image.view(image.shape[2], image.shape[1], image.shape[0])
-        plt.subplot(2, 3, i + 1)
-        # Matplotlib takes images as (Height, Width, Channel)
-        plt.imshow(image)  # PyTorch takes images as (Channel, Height, Width)
-        plt.title(f"Label: {int(y[random_index[i]])}")
-        plt.axis('off')
-    plt.tight_layout()
-    plt.show()
-
-    # Histogram Plot
-    plt.figure(figsize=(10, 9))  # Wider and taller figure
-
-    for i in range(3):
-        image, label = dataset[random_index[i]]
-
-        # Convert from (C, H, W) to (H, W, C) for display
-        image_np = image.permute(1, 2, 0).numpy()
-
-        # Image subplot
-        plt.subplot(3, 2, 2 * i + 1)
-        plt.imshow(image_np)
-        plt.title(f"Image - Label: {int(label)}")
-        plt.axis('off')
-
-        # Histogram subplot
-        plt.subplot(3, 2, 2 * i + 2)
-        sns.histplot(image.numpy().ravel(), kde=True, bins=50, color='skyblue')
-        plt.title("Pixel Intensity Distribution")
-        plt.xlabel("Pixel Value")
-        plt.ylabel("Frequency")
-
-    plt.tight_layout()
-    plt.show()
+    # y = y.repeat_interleave(X.shape[1])
+    # X = X.reshape(-1)
+    # dataset = MRI(X, y, testing=True)
+    #
+    # # replace=False avoids duplicates values
+    # random_index = np.random.choice(len(X), 6, replace=False)  # Choose 6 Random Indexes for MRI Images
+    # plt.figure(figsize=(10, 5))
+    # # print(f'Random Index: {random_index}')
+    # # Show Images
+    # for i in range(6):
+    #     image, label = dataset[random_index[i]]
+    #     image = image.view(image.shape[2], image.shape[1], image.shape[0])
+    #     plt.subplot(2, 3, i + 1)
+    #     # Matplotlib takes images as (Height, Width, Channel)
+    #     plt.imshow(image)  # PyTorch takes images as (Channel, Height, Width)
+    #     plt.title(f"Label: {int(y[random_index[i]])}")
+    #     plt.axis('off')
+    # plt.tight_layout()
+    # plt.show()
+    #
+    # # Histogram Plot
+    # plt.figure(figsize=(10, 9))  # Wider and taller figure
+    #
+    # for i in range(3):
+    #     image, label = dataset[random_index[i]]
+    #
+    #     # Convert from (C, H, W) to (H, W, C) for display
+    #     image_np = image.permute(1, 2, 0).numpy()
+    #
+    #     # Image subplot
+    #     plt.subplot(3, 2, 2 * i + 1)
+    #     plt.imshow(image_np)
+    #     plt.title(f"Image - Label: {int(label)}")
+    #     plt.axis('off')
+    #
+    #     # Histogram subplot
+    #     plt.subplot(3, 2, 2 * i + 2)
+    #     sns.histplot(image.numpy().ravel(), kde=True, bins=50, color='skyblue')
+    #     plt.title("Pixel Intensity Distribution")
+    #     plt.xlabel("Pixel Value")
+    #     plt.ylabel("Frequency")
+    #
+    # plt.tight_layout()
+    # plt.show()
 
 
 if __name__ == '__main__':

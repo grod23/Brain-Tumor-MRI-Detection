@@ -66,7 +66,7 @@ def collect_image_paths():
     # Return Image Paths and Corresponding Labels
     # print(f'Image Path Length: {len(image_paths)}')
     # print(f'Lengh of Labels: {len(labels)}')
-    return np.array(image_paths), torch.tensor(labels, dtype=torch.float32)
+    return np.array(image_paths), torch.LongTensor(labels)
 
 def compute(image_paths):
     pixel_values = []
@@ -148,9 +148,11 @@ class MRI(Dataset):
     # Standardization(Z-Score Normalization): (X - mean(X)/ SD(X)): - Centers data around 0 with unit variance
     # Improves convergence. Without, optimization may have unwanted oscillations during convergence. Required for MRI
     # Preferred when outliers are present
+    # transforms.Normalize(mean=[], std=[])
 
     # Min-Max Normalization: Scales data point values to be between [0,1]. Typically, not required for MRI, Z-Score
     # Normalization would be more important
+    # transforms.ToTensor()
 
     # Histogram: Visual representation of quantitative data distribution
     # Histogram Equalization adjusts the contrast of an image by adjusting histogram to be uniform throughout.

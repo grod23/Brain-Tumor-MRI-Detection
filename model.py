@@ -9,6 +9,7 @@ class Model(nn.Module):
         self.cnn = nn.Sequential(
             nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5),
             # nn.BatchNorm2d(6),
+            # Could try nn.Silu() or nn.Relu()
             nn.Tanh(),
             nn.MaxPool2d(kernel_size=2, stride=5),
 
@@ -17,6 +18,9 @@ class Model(nn.Module):
             nn.Tanh(),
             nn.MaxPool2d(kernel_size=2, stride=5)
         )
+
+        # Consider implementing CBAM (Convolutional Block Attention Module)
+
         self.fc_layer = nn.Sequential(
             nn.Linear(in_features=1024, out_features=256),
             # nn.BatchNorm2d(246),
