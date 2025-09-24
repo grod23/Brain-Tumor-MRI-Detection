@@ -95,23 +95,13 @@ def get_data_split(image_paths, labels):
     # Remove all augmented images from X Test and X Validation
     X_val, X_test = get_original(X_val), get_original(X_test)
 
-    # print(f'X Train Length: {len(X_train)}')
-    # print(f'Y Train Length: {len(y_train)}')
-    # print(f'X Validation Length: {len(X_val)}')
-    # print(f'Y Validation Length: {len(y_val)}')
-    # print(f'X Test Length: {len(X_test)}')
-    # print(f'Y Test Length: {len(y_test)}')
-    #
-    # for i in range(len(X_train)):
-    #     print(f'File Name: {X_train[i]}, Label: {y_train[i]}')
-
     # Normal: 0
     # Glioma: 1
     # Meningioma: 2
     # Pituitary: 3
 
     return np.array(X_train), torch.LongTensor(y_train), np.array(X_val), torch.LongTensor(y_val), np.array(
-        X_test), torch.LongTensor(y_val),
+        X_test), torch.LongTensor(y_test),
 
 def compute(image_paths):
     pixel_values = []
@@ -155,7 +145,7 @@ class MRI(Dataset):
 
         # Preprocessing
 
-        # Histogram Equalizationbw
+        # Histogram Equalization
         image = cv2.equalizeHist(image)
 
         if self.testing:

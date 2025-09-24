@@ -62,12 +62,12 @@ from dataset import MRI, collect_image_paths, get_data_split
 # Outputs: 4 - Normal, Glioma, Meningioma, Pituitary
 
 def main():
-    print("CUDA Available:", torch.cuda.is_available())
-    print("Device Name:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "No GPU")
+    print(f'Device Available: {torch.cuda.is_available()}')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    model = Model()
+    model = Model().to(device)
 
-    epochs = 100
+    epochs = 10
     batches = 32
     learning_rate = 0.001
     weight_decay = 1e-4
@@ -92,21 +92,17 @@ def main():
     validation_loader = DataLoader(validation_dataset, batch_size=batches, num_workers=4, shuffle=False)
     testing_loader = DataLoader(test_dataset, batch_size=batches, num_workers=4, shuffle=False)
     # Num_workers specify how many parallel subprocesses are used to load the data
-    # DataLoaders also add Batch Size to Shape: (32, 1, 224, 224)
-
-    # Training
+    # DataLoaders also add Batch Size to Shape: (batch_size, 1, 224, 224)
 
     # Loss Tracking
     loss_track = []
-
+    # Training
     model.train()
     for epoch in range(epochs):
         epoch_loss = 0.0
         for X_batch, y_batch in training_loader:
-            print('Next Batch')
-
             # Use GPU
-
+            X_batch, y_batch = X_batch.to(device), y_batch.to(device)
             # Reset Gradients
             optimizer.zero_grad()
             # Get y_hat
@@ -123,52 +119,110 @@ def main():
             epoch_loss += loss.item()
 
         train_loss = epoch_loss / len(training_loader)
-        if epoch % 10 == 0:
-            print(f'Training Epoch: {epoch}, Loss: {train_loss}')
-        sys.exit()
+        loss_track.append(train_loss)
+        # if epoch % 10 == 0:
+        print(f'Training Epoch: {epoch}, Loss: {train_loss}')
+
+
+    # Validation
+    model.eval()
+    validation_loss = []
+    correct = 0
+
+    # No Gradient Calculation
+    with torch.no_grad():
+        batch_loss = 0
+        for X_val, y_val in validation_loader:
+            # Use GPU
+            X_val, y_val = X_val.to(device), y_val.to(device)
+            y_predicted = model(X_val)
+            loss = loss_fn(y_predicted, y_val)
+            batch_loss += loss.item()
+            print(f'Loss: {loss.item()}')
+            print(f'Y Predicted Shape : {y_predicted.argmax(dim=1).shape}: Y Predicted: {y_predicted.argmax(dim=1)}')
+            print(f'Y Validation Shape: {y_val.shape}, Y Validation: {y_val}')
+            correct += (y_predicted.argmax(dim=1) == y_val).sum().item()
+        avg_val_loss = batch_loss / len(validation_loader)
+        validation_loss.append(avg_val_loss)
+        print(f'Validation Loss: {avg_val_loss}')
+        print(f'Correct: {correct}, Total Images: {len(validation_loader) * batches}')
+        print(f'Accuracy: {correct / len(validation_loader) * batches}')
+
+
+
+
+    # Visualize Training Loss
+    plt.figure(figsize=(10, 5))
+    plt.plot(loss_track, label='Training Loss', color='blue', linewidth=2)
+
+    # Axes and Title Labels
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+
+    # Show
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+    # Visualize Validation Loss
+    plt.figure(figsize=(10, 5))
+    plt.plot(validation_loss, label='Validation Loss', color='green', linewidth=2)
+
+    # Axes and Title Labels
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+
+    # Show
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
 
     # Visualizing Feature Maps
-    num_layers = 0
-    conv_layers = []
-    # List of the 2 sequential objects in model (nn.Sequential)
-    model_children = list(model.children())
-
-    for child in model_children:
-        # Checks for typy Sequential
-        if type(child) == nn.Sequential:
-            # Want to visualize the child of model_children
-            for layer in child.children():
-                # If it's a Convolutional Layer
-                if type(layer) == nn.Conv2d:
-                    # Record This Layer
-                    num_layers += 1
-                    conv_layers.append(layer)
-
-    print(conv_layers)
-    y = y.repeat_interleave(X.shape[1])
-    X = X.reshape(-1)
-    dataset = MRI(X, y, testing=False)
-    image, label = dataset.__getitem__(3233)
-    print(label)
-    print(image.unsqueeze(0).shape)
-    plt.imshow(image.view(image.shape[2], image.shape[1], image.shape[0]))
-    plt.show()
-    image = image.unsqueeze(0)
-    results = [conv_layers[0](image)]
-    for i in range(1, len(conv_layers)):
-        # Input for next layer is output of last layer
-        results.append(conv_layers[i](results[-1]))
-    print(results[0].shape)
-
-    # Visualize
-    for layer in range(len(results)):
-        plt.figure(figsize=(30, 10))
-        layer_viz = results[layer].squeeze()
-        for i, f in enumerate(layer_viz):
-            plt.subplot(2, 8, i + 1)
-            plt.imshow(f.detach().numpy())
-            plt.axis('off')
-        plt.show()
+    # num_layers = 0
+    # conv_layers = []
+    # # List of the 2 sequential objects in model (nn.Sequential)
+    # model_children = list(model.children())
+    #
+    # for child in model_children:
+    #     # Checks for typy Sequential
+    #     if type(child) == nn.Sequential:
+    #         # Want to visualize the child of model_children
+    #         for layer in child.children():
+    #             # If it's a Convolutional Layer
+    #             if not type(layer) == nn.Linear:
+    #                 # Record This Layer
+    #                 num_layers += 1
+    #                 conv_layers.append(layer)
+    #
+    # print(conv_layers)
+    # y = y.repeat_interleave(X.shape[1])
+    # X = X.reshape(-1)
+    # print(f'X Shape: {X.shape}')
+    # dataset = MRI(X, y, testing=False)
+    # image, label = dataset.__getitem__(3233)
+    # print(f'Image Shape Before: {image.shape}')
+    # print(label)
+    # print(image.unsqueeze(0).shape)
+    # plt.imshow(image.view(image.shape[2], image.shape[1], image.shape[0]))
+    # plt.show()
+    # image = image.unsqueeze(0).to(device)
+    # results = [conv_layers[0](image)]
+    # for i in range(1, len(conv_layers)):
+    #     # Input for next layer is output of last layer
+    #     results.append(conv_layers[i](results[-1]))
+    # print(results[0].shape)
+    #
+    # # Visualize
+    # for layer in range(len(results)):
+    #     plt.figure(figsize=(30, 10))
+    #     layer_viz = results[layer].squeeze()
+    #     for i, f in enumerate(layer_viz):
+    #         print(f'F Shape: {f.shape}')
+    #         plt.subplot(2, 8, i + 1)
+    #         plt.imshow(f.detach().cpu().numpy())
+    #         plt.axis('off')
+    #     plt.show()
 
     # Brain MRI Images Visualization
 

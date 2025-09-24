@@ -10,12 +10,12 @@ class Model(nn.Module):
             nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5),
             # nn.BatchNorm2d(6),
             # Could try nn.Silu() or nn.Relu()
-            nn.Tanh(),
+            nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=5),
 
             nn.Conv2d(in_channels=6, out_channels=16, kernel_size=5),
             # nn.BatchNorm2d(16),
-            nn.Tanh(),
+            nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=5)
         )
 
@@ -24,10 +24,10 @@ class Model(nn.Module):
         self.fc_layer = nn.Sequential(
             nn.Linear(in_features=1024, out_features=256),
             # nn.BatchNorm2d(246),
-            nn.Tanh(),
+            nn.ReLU(),
             nn.Linear(in_features=256, out_features=120),
             # nn.BatchNorm2d(120),
-            nn.Tanh(),
+            nn.ReLU(),
             # 4 Predictions: Normal, Glioma, Meningioma, Pituitary.
             nn.Linear(in_features=120, out_features=4)
         )
