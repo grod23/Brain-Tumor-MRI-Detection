@@ -77,13 +77,12 @@ def main():
     # End Training Early if no longer decreasing loss
     scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=5, factor=0.5)
 
-    X, y = collect_image_paths()
     # Get Train Val Test Split
-    X_train, y_train, X_val, y_val, X_test, y_test = get_data_split(X, y)
+    X_train, y_train, X_val, y_val, X_test, y_test = get_data_split()
 
     # Create DataSet Instances
     train_dataset = MRI(X_train, y_train)
-    validation_dataset = MRI(X_val, y_val)
+    validation_dataset = MRI(X_val, y_val, testing=True)
     test_dataset = MRI(X_test, y_test, testing=True)
 
 
@@ -98,6 +97,7 @@ def main():
     loss_track = []
     # Training
     model.train()
+
     for epoch in range(epochs):
         epoch_loss = 0.0
         for X_batch, y_batch in training_loader:
@@ -120,9 +120,7 @@ def main():
 
         train_loss = epoch_loss / len(training_loader)
         loss_track.append(train_loss)
-        # if epoch % 10 == 0:
         print(f'Training Epoch: {epoch}, Loss: {train_loss}')
-
 
     # Validation
     model.eval()
@@ -139,16 +137,15 @@ def main():
             loss = loss_fn(y_predicted, y_val)
             batch_loss += loss.item()
             print(f'Loss: {loss.item()}')
-            print(f'Y Predicted Shape : {y_predicted.argmax(dim=1).shape}: Y Predicted: {y_predicted.argmax(dim=1)}')
-            print(f'Y Validation Shape: {y_val.shape}, Y Validation: {y_val}')
+            # print(f'Y Predicted Shape : {y_predicted.argmax(dim=1).shape}: Y Predicted: {y_predicted.argmax(dim=1)}')
+            # print(f'Y Validation Shape: {y_val.shape}, Y Validation: {y_val}')
             correct += (y_predicted.argmax(dim=1) == y_val).sum().item()
+
         avg_val_loss = batch_loss / len(validation_loader)
         validation_loss.append(avg_val_loss)
         print(f'Validation Loss: {avg_val_loss}')
         print(f'Correct: {correct}, Total Images: {len(validation_loader) * batches}')
-        print(f'Accuracy: {correct / len(validation_loader) * batches}')
-
-
+        print(f'Accuracy: {correct / (len(validation_loader) * batches)}')
 
 
     # Visualize Training Loss
