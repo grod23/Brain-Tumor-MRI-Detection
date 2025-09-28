@@ -95,6 +95,11 @@ def get_data_split():
 
     X_val, X_test, y_val, y_test = train_test_split(X_testing, y_testing, test_size=0.5, random_state=42, stratify=y_testing)
 
+    print(f'X Test: {len(X_test)}')
+    print(f'Y test: {len(y_test)}')
+    print(f'X Validation: {len(X_val)}')
+    print(f'Y Validation: {len(y_val)}')
+
     # Optional: check for group leakage
     assert set(groups[train_index]).isdisjoint(set(groups[test_index])), "Group leakage detected!"
     print(f'Train size: {len(X_train)} images from {len(np.unique(groups[train_index]))} patients')
@@ -157,19 +162,16 @@ class MRI(Dataset):
         # Histogram Equalization
         image = cv2.equalizeHist(image)
 
-        if self.testing:
-            #print(f'Validation Image Path: {image_path}')
-            # image = image.numpy()
-
-            # Noise Reduction:
-            # For Salt and Pepper Noise
-            image = cv2.medianBlur(image, 3)  # Kernel Size must be odd
-
-            # Bilateral Filter to smooth preserve edges very well
-            image = cv2.bilateralFilter(image, d=3, sigmaColor=10, sigmaSpace=10)
-
-            # For testing:
-            # No augmented images
+        # if self.testing:
+        #     # Noise Reduction:
+        #     # For Salt and Pepper Noise
+        #     image = cv2.medianBlur(image, 3)  # Kernel Size must be odd
+        #
+        #     # Bilateral Filter to smooth preserve edges very well
+        #     image = cv2.bilateralFilter(image, d=3, sigmaColor=10, sigmaSpace=10)
+        #
+        #     # For testing:
+        #     # No augmented images
 
         # Normalize and Resize
         image = self.transform(image)

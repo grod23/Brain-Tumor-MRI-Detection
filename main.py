@@ -67,7 +67,7 @@ def main():
 
     model = Model().to(device)
 
-    epochs = 10
+    epochs = 2
     batches = 32
     learning_rate = 0.001
     weight_decay = 1e-4
@@ -82,8 +82,8 @@ def main():
 
     # Create DataSet Instances
     train_dataset = MRI(X_train, y_train)
-    validation_dataset = MRI(X_val, y_val, testing=True)
-    test_dataset = MRI(X_test, y_test, testing=True)
+    validation_dataset = MRI(X_val, y_val)
+    test_dataset = MRI(X_test, y_test)
 
 
     # Create DataLoaders
@@ -95,10 +95,14 @@ def main():
 
     # Loss Tracking
     loss_track = []
+    # Validation Tracking
+    val_track = []
+    # Accuracy
+    correct = 0
+    total = 0
     # Training
-    model.train()
-
     for epoch in range(epochs):
+        model.train()
         epoch_loss = 0.0
         for X_batch, y_batch in training_loader:
             # Use GPU
@@ -122,56 +126,35 @@ def main():
         loss_track.append(train_loss)
         print(f'Training Epoch: {epoch}, Loss: {train_loss}')
 
-    # Validation
-    model.eval()
-    validation_loss = []
-    correct = 0
-
-    # No Gradient Calculation
-    with torch.no_grad():
-        batch_loss = 0
-        for X_val, y_val in validation_loader:
-            # Use GPU
-            X_val, y_val = X_val.to(device), y_val.to(device)
-            y_predicted = model(X_val)
-            loss = loss_fn(y_predicted, y_val)
-            batch_loss += loss.item()
-            print(f'Loss: {loss.item()}')
-            # print(f'Y Predicted Shape : {y_predicted.argmax(dim=1).shape}: Y Predicted: {y_predicted.argmax(dim=1)}')
-            # print(f'Y Validation Shape: {y_val.shape}, Y Validation: {y_val}')
-            correct += (y_predicted.argmax(dim=1) == y_val).sum().item()
+        # Validation for the current epoch
+        model.eval()
+        # No Gradient Calculation
+        with torch.no_grad():
+            batch_loss = 0
+            for X_val, y_val in validation_loader:
+                # Use GPU
+                X_val, y_val = X_val.to(device), y_val.to(device)
+                y_predicted = model(X_val)
+                loss = loss_fn(y_predicted, y_val)
+                batch_loss += loss.item()
+                correct += (y_predicted.argmax(dim=1) == y_val).sum().item()
+                total += y_val.size(0)
 
         avg_val_loss = batch_loss / len(validation_loader)
-        validation_loss.append(avg_val_loss)
-        print(f'Validation Loss: {avg_val_loss}')
-        print(f'Correct: {correct}, Total Images: {len(validation_loader) * batches}')
-        print(f'Accuracy: {correct / (len(validation_loader) * batches)}')
+        val_track.append(avg_val_loss)
+        print(f'Training Epoch: {epoch}, Validation Loss: {avg_val_loss}')
 
+    print(f'Correct: {correct}, Total Images: {total}')
+    print(f'Validation Accuracy: {correct / total}')
 
-    # Visualize Training Loss
-    plt.figure(figsize=(10, 5))
-    plt.plot(loss_track, label='Training Loss', color='blue', linewidth=2)
-
-    # Axes and Title Labels
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-
-    # Show
+    # Visualize Training and Validation Loss
+    plt.figure(figsize=(15, 9))
+    plt.plot(loss_track, c='b', label='Train Loss')
+    plt.plot(val_track, c='r', label='Validation Loss')
     plt.legend()
-    plt.grid(True)
-    plt.show()
-
-    # Visualize Validation Loss
-    plt.figure(figsize=(10, 5))
-    plt.plot(validation_loss, label='Validation Loss', color='green', linewidth=2)
-
-    # Axes and Title Labels
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-
-    # Show
-    plt.legend()
-    plt.grid(True)
+    plt.grid()
+    plt.xlabel('Epochs', fontsize=20)
+    plt.ylabel('Loss', fontsize=20)
     plt.show()
 
 
@@ -182,7 +165,7 @@ def main():
     # model_children = list(model.children())
     #
     # for child in model_children:
-    #     # Checks for typy Sequential
+    #     # Checks for type Sequential
     #     if type(child) == nn.Sequential:
     #         # Want to visualize the child of model_children
     #         for layer in child.children():
@@ -193,10 +176,8 @@ def main():
     #                 conv_layers.append(layer)
     #
     # print(conv_layers)
-    # y = y.repeat_interleave(X.shape[1])
-    # X = X.reshape(-1)
-    # print(f'X Shape: {X.shape}')
-    # dataset = MRI(X, y, testing=False)
+    # print(f'X Shape: {X_train.shape}')
+    # dataset = MRI(X_train, y_train, testing=False)
     # image, label = dataset.__getitem__(3233)
     # print(f'Image Shape Before: {image.shape}')
     # print(label)
