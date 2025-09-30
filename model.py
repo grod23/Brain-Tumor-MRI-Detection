@@ -2,9 +2,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class Model(nn.Module):
-    def __init__(self):
+    def __init__(self, dropout_probability):
         super(Model, self).__init__()
-        self.dropout_probability = 0.3
+        # Dropout
+        self.dropout_probability = dropout_probability
         # Image Shape: (Batch Size, Channels, Height, Width) = (32, 1, 224, 224) Gray Scale.
         self.cnn = nn.Sequential(
             nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5),
@@ -23,10 +24,12 @@ class Model(nn.Module):
 
         self.fc_layer = nn.Sequential(
             nn.Linear(in_features=1024, out_features=256),
-            # nn.BatchNorm2d(246),
+            nn.BatchNorm1d(256),
+            nn.Dropout(self.dropout_probability),
             nn.ReLU(),
             nn.Linear(in_features=256, out_features=120),
-            # nn.BatchNorm2d(120),
+            nn.BatchNorm1d(120),
+            nn.Dropout(self.dropout_probability),
             nn.ReLU(),
             # 4 Predictions: Normal, Glioma, Meningioma, Pituitary.
             nn.Linear(in_features=120, out_features=4)

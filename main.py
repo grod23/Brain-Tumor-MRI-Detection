@@ -30,15 +30,15 @@ from train import train
 # Outputs: 4 - Normal, Glioma, Meningioma, Pituitary
 
 def main():
-    epochs = 5
-    batches = 32
+    epochs = 10
+    batches = 16
     learning_rate = 0.005
     weight_decay = 1e-4
-    train(epochs, batches, learning_rate, weight_decay)
+    dropout_probability = 0.3
+    train(epochs, batches, learning_rate, weight_decay, dropout_probability)
 
-    # Training Epoch: 4, Validation Loss: 0.5504887282848359
-    # Correct: 2484, Total Images: 3090
-    # Validation Accuracy: 0.8025848142164782
+    # Training Epoch: 2, Loss: 0.22814824276532822
+    # Training Epoch: 2, Validation Loss: 0.3785713598132133
 
     # Visualizing Feature Maps
     # num_layers = 0

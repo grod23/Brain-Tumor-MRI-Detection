@@ -20,12 +20,12 @@ from model import Model
 from dataset import MRI, get_data_split
 
 
-def train(epochs, batches, learning_rate, weight_decay):
+def train(epochs, batches, learning_rate, weight_decay, dropout_probability):
     print(f'Device Available: {torch.cuda.is_available()}')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # Set Model GPU
-    model = Model().to(device)
+    model = Model(dropout_probability).to(device)
     # Loss Function
     loss_fn = nn.CrossEntropyLoss()
     # Couples with Weight Decay
