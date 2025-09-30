@@ -30,10 +30,10 @@ from train import train
 # Outputs: 4 - Normal, Glioma, Meningioma, Pituitary
 
 def main():
-    epochs = 10
+    epochs = 5
     batches = 32
     learning_rate = 0.005
-    weight_decay = 1e-5
+    weight_decay = 1e-4
     train(epochs, batches, learning_rate, weight_decay)
 
     # Training Epoch: 4, Validation Loss: 0.5504887282848359

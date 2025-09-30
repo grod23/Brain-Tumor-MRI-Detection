@@ -8,13 +8,13 @@ class Model(nn.Module):
         # Image Shape: (Batch Size, Channels, Height, Width) = (32, 1, 224, 224) Gray Scale.
         self.cnn = nn.Sequential(
             nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5),
-            # nn.BatchNorm2d(6),
-            # Could try nn.Silu() or nn.Relu()
+            nn.BatchNorm2d(6),
+            # Consider SILU()
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=5),
 
             nn.Conv2d(in_channels=6, out_channels=16, kernel_size=5),
-            # nn.BatchNorm2d(16),
+            nn.BatchNorm2d(16),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=5)
         )
