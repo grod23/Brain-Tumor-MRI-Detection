@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="accountSettings">
+    <option name="activeProfile" value="profile:arn:aws:iam::065939300880:user/grod-ml" />
+    <option name="activeRegion" value="us-west-1" />
+    <option name="recentlyUsedProfiles">
+      <list>
+        <option value="profile:arn:aws:iam::065939300880:user/grod-ml" />
+        <option value="profile:arn:aws:iam::065939300880:u2f/root/grod23-HFPLWHHXTRC3FACIXRTIU5EX5U" />
+      </list>
+    </option>
+    <option name="recentlyUsedRegions">
+      <list>
+        <option value="us-west-1" />
+        <option value="us-east-1" />
+      </list>
+    </option>
+  </component>
+  <component name="explorerToolWindow">
+    <option name="selectedTab" value="Explorer" />
+  </component>
+</project>
