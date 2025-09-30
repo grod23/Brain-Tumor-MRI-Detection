@@ -5,13 +5,10 @@ import re
 
 import cv2
 import torch
-from sklearn.model_selection import train_test_split, StratifiedGroupKFold, GroupShuffleSplit
-from torch.optim.radam import radam
+from sklearn.model_selection import train_test_split, GroupShuffleSplit
 from torch.utils.data import Dataset
 from torchvision import transforms
 import numpy as np
-import pandas as pd
-import sys
 from collections import defaultdict
 
 

@@ -1,10 +1,10 @@
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 class Model(nn.Module):
     def __init__(self):
         super(Model, self).__init__()
+        self.dropout_probability = 0.3
         # Image Shape: (Batch Size, Channels, Height, Width) = (32, 1, 224, 224) Gray Scale.
         self.cnn = nn.Sequential(
             nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5),
