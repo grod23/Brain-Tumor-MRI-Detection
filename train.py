@@ -112,3 +112,33 @@ def train(epochs, batches, learning_rate, weight_decay, dropout_probability):
     plt.xlabel('Epochs', fontsize=20)
     plt.ylabel('Loss', fontsize=20)
     plt.show()
+
+    # Testing
+
+    # Accuracy
+    test_correct = 0
+    test_total = 0
+    # Classification Report
+    y_true = []
+    y_pred = []
+
+    with torch.no_grad():
+        for X_test, y_test in testing_loader:
+            # Use GPU
+            X_test, y_test = X_test.to(device), y_test.to(device)
+            # Model Prediction
+            y_prediction = model(X_test)
+
+            # Get Total Report
+            y_true.extend(y_test.cpu().numpy())
+            y_pred.extend(y_prediction.cpu().numpy())
+
+            # Total Accuracy
+            test_correct += (y_prediction.argmax(dim=1)==y_test).sum().item()
+            test_total += y_test.size(0)
+
+
+    test_accuracy = test_correct / test_total
+    print(f'Correct: {test_correct}, Total: {test_total}')
+    print(f'Test Accuracy: {test_accuracy}')
+

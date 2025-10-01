@@ -31,9 +31,9 @@ from train import train
 
 def main():
     epochs = 10
-    batches = 16
-    learning_rate = 0.005
-    weight_decay = 1e-4
+    batches = 5
+    learning_rate = 0.0005
+    weight_decay = 1e-3
     dropout_probability = 0.3
     train(epochs, batches, learning_rate, weight_decay, dropout_probability)
 
