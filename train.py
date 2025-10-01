@@ -142,3 +142,9 @@ def train(epochs, batches, learning_rate, weight_decay, dropout_probability):
     print(f'Correct: {test_correct}, Total: {test_total}')
     print(f'Test Accuracy: {test_accuracy}')
 
+    # Evaluation Metrics
+    report = classification_report(y_true, y_pred)
+    matrix = confusion_matrix(y_true, y_pred)
+
+    print(report)
+    print(matrix)
