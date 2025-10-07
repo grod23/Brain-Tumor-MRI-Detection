@@ -20,8 +20,7 @@ from model import Model
 from dataset import MRI, get_data_split
 import argparse
 
-
-def train(epochs, batches, learning_rate, weight_decay, dropout_probability):
+def train(epochs, batch_size, learning_rate, weight_decay, dropout_probability):
     print(f'Device Available: {torch.cuda.is_available()}')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -43,10 +42,10 @@ def train(epochs, batches, learning_rate, weight_decay, dropout_probability):
     test_dataset = MRI(X_test, y_test)
 
     # Create DataLoaders
-    training_loader = DataLoader(train_dataset, batch_size=batches, num_workers=4,
+    training_loader = DataLoader(train_dataset, batch_size=batch_size, num_workers=4,
                                  shuffle=True)  # Only Shuffle Training Data
-    validation_loader = DataLoader(validation_dataset, batch_size=batches, num_workers=4, shuffle=False)
-    testing_loader = DataLoader(test_dataset, batch_size=batches, num_workers=4, shuffle=False)
+    validation_loader = DataLoader(validation_dataset, batch_size=batch_size, num_workers=4, shuffle=False)
+    testing_loader = DataLoader(test_dataset, batch_size=batch_size, num_workers=4, shuffle=False)
     # Num_workers specify how many parallel subprocesses are used to load the data
     # DataLoaders also add Batch Size to Shape: (batch_size, 1, 224, 224)
 
@@ -149,17 +148,28 @@ def train(epochs, batches, learning_rate, weight_decay, dropout_probability):
     print(f'Test Accuracy: {test_accuracy}')
 
     # Evaluation Metrics
-    report = classification_report(y_true, y_pred)
+    report = classification_report(y_true, y_pred, output_dict=True)
     matrix = confusion_matrix(y_true, y_pred)
+    class_report = classification_report(y_true, y_pred, output_dict=True)
 
+    print(class_report)
     print(report)
     print(matrix)
+
+    total_accuracy = report['accuracy']
+    for key in report.keys():
+        # Print Only Class Values
+        if key.isdigit():
+            # Print in SageMaker-friendly format
+            print(f"pre: {report[key]['precision']:.4f}")
+            print(f"rec: {report[key]['recall']:.4f}")
+            print(f"f1: {report[key]['f1-score']:.4f}")
 
 if __name__ == '__main__':
     # Sagemaker Compatible
     parser = argparse.ArgumentParser()
     parser.add_argument('--epochs', type=int, default=20)
-    parser.add_argument('--batches', type=int, default=5)
+    parser.add_argument('--batch_size', type=int, default=5)
     parser.add_argument('--learning_rate', type=float, default=0.0001)
     parser.add_argument('--weight_decay', type=float, default=0.001)
     parser.add_argument('--dropout_probability', type=float, default=0.3)
@@ -168,7 +178,7 @@ if __name__ == '__main__':
 
     train(
         epochs=args.epochs,
-        batches=args.batches,
+        batch_size=args.batch_size,
         learning_rate=args.learning_rate,
         weight_decay=args.weight_decay,
         dropout_probability=args.dropout_probability

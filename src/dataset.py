@@ -2,6 +2,7 @@
 import glob
 import os.path
 import re
+import sys
 
 import cv2
 import torch
@@ -19,15 +20,17 @@ from collections import defaultdict
 # Image Size Varies
 # 7 images per patient. First image is original while the rest are augmented
 # Every 7 images is the original
+
+# Gets the File Number in order to sort numerically
+def extract_number(file_name):
+    match = re.search(r'\d+', file_name)
+    return int(match.group())
+
+# Loads Images Locally
 def collect_image_paths():
     image_paths = []
     labels = []
     groups = []
-
-    # Gets the File Number in order to sort numerically
-    def extract_number(file_name):
-        match = re.search(r'\d+', file_name)
-        return int(match.group())
 
     def get_images(path, label):
         # Image Paths for Specific Patient
@@ -55,11 +58,51 @@ def collect_image_paths():
                 groups.append(patient_id)
 
     # Load Image Paths
-    get_images("./Brain_Tumor_Dataset/Normal/*.jpg", 0)
-    get_images("./Brain_Tumor_Dataset/Tumor/glioma_tumor/*.jpg", 1)
-    get_images("./Brain_Tumor_Dataset/Tumor/meningioma_tumor/*.jpg", 2)
-    get_images("./Brain_Tumor_Dataset/Tumor/pituitary_tumor/*.jpg", 3)
+    get_images("C:/Users/gabe7/PycharmProjects/BrainTumorDetectionMRI/Brain_Tumor_Dataset/Normal/*.jpg", 0)
+    get_images("C:/Users/gabe7/PycharmProjects/BrainTumorDetectionMRI/Brain_Tumor_Dataset/Tumor/glioma_tumor/*.jpg", 1)
+    get_images("C:/Users/gabe7/PycharmProjects/BrainTumorDetectionMRI/Brain_Tumor_Dataset/Tumor/meningioma_tumor/*.jpg", 2)
+    get_images("C:/Users/gabe7/PycharmProjects/BrainTumorDetectionMRI/Brain_Tumor_Dataset/Tumor/pituitary_tumor/*.jpg", 3)
 
+    return np.array(image_paths), np.array(labels), np.array(groups)
+
+# Loads images from s3 bucket.
+def collect_s3():
+    # SageMaker mounts input data to /opt/ml/input/data/
+    base_dir = "/opt/ml/input/data/training"
+    image_paths = []
+    labels = []
+    groups = []
+
+    def get_s3_images(path, label):
+        # Image Paths for Specific Patient
+        patients = defaultdict(list)
+        files = glob.iglob(os.path.join(path, "*.jpg"))
+        # Sort Files Numerically
+        files = sorted(files, key=extract_number)
+
+        # Loop and Categorize Images by Patient
+        for file in files:
+            file_name = os.path.basename(file).removesuffix('.jpg')
+            parts = file_name.split('_')
+            base_name = '_'.join(parts[0:2])
+            patients[base_name].append(file)
+
+        for patient_id, images in patients.items():
+            if len(images) != 7:
+                raise Exception('Not 7 Images')
+            for image in images:
+                # Append Image Features(image_path, label, and id)
+                image_paths.append(image)
+                labels.append(label)
+                groups.append(patient_id)
+
+    # Use LOCAL paths now
+    get_s3_images(os.path.join(base_dir, "Normal"), 0)
+    get_s3_images(os.path.join(base_dir, "glioma_tumor"), 1)
+    get_s3_images(os.path.join(base_dir, "meningioma_tumor"), 2)
+    get_s3_images(os.path.join(base_dir, "pituitary_tumor"), 3)
+
+    print(image_paths, labels, groups)
     return np.array(image_paths), np.array(labels), np.array(groups)
 
 def get_data_split():

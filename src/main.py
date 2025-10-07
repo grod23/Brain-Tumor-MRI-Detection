@@ -1,3 +1,5 @@
+import torch
+
 from train import train
 
 # Kaggle Brain MRI Tumor Dataset
@@ -31,12 +33,13 @@ from train import train
 # Outputs: 4 - Normal, Glioma, Meningioma, Pituitary
 
 def main():
-    epochs = 20
-    batches = 5
-    learning_rate = 0.0001
-    weight_decay = 1e-3
-    dropout_probability = 0.3
-    train(epochs, batches, learning_rate, weight_decay, dropout_probability)
+    epochs = 11
+    batch_size = 25
+    learning_rate = 5.177240376658157e-05
+    weight_decay = 0.0011640371796062456
+    dropout_probability = 0.13349162583162713
+    # torch.seed()
+    train(epochs, batch_size, learning_rate, weight_decay, dropout_probability)
 
     # Test Accuracy: 0.8603712671509282
     #               precision    recall  f1-score   support
