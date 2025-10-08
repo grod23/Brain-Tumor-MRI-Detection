@@ -1,5 +1,3 @@
-import torch
-
 from train import train
 
 # Kaggle Brain MRI Tumor Dataset
@@ -22,22 +20,17 @@ from train import train
 # Activation Function: ReLU
 # Optimizer: ADAM
 
-# To Identify Tumor:
-# Loss Function: Binary Cross Entropy
-# Inputs: 1 Image
-# Outputs: 2- Normal or Tumor
-
 # To Identify Type of Tumor:
 # Loss Function: Cross Entropy
 # Inputs: 7 Images
 # Outputs: 4 - Normal, Glioma, Meningioma, Pituitary
 
 def main():
-    epochs = 11
+    epochs = 10
     batch_size = 25
-    learning_rate = 5.177240376658157e-05
-    weight_decay = 0.0011640371796062456
-    dropout_probability = 0.13349162583162713
+    learning_rate = .00005
+    weight_decay = 0.001
+    dropout_probability = 0.3
     # torch.seed()
     train(epochs, batch_size, learning_rate, weight_decay, dropout_probability)
 

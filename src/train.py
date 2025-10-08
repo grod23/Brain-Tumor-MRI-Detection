@@ -1,14 +1,14 @@
 import sys
 import os
-
 # Graphing Library
 import matplotlib.pyplot as plt
 import seaborn as sns
+import pandas as pd
 from tqdm import tqdm
 
 # Evaluation Metrics
 from sklearn.metrics import classification_report
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 # Neural Network Libraries
 import torch
 import torch.nn as nn
@@ -80,7 +80,7 @@ def train(epochs, batch_size, learning_rate, weight_decay, dropout_probability):
 
         train_loss = epoch_loss / len(training_loader)
         loss_track.append(train_loss)
-        print(f'Training Epoch: {epoch}, Loss: {train_loss}')
+        print(f'Epoch: {epoch}, Training Loss: {train_loss}')
 
         # Validation for the current epoch
         model.eval()
@@ -148,22 +148,21 @@ def train(epochs, batch_size, learning_rate, weight_decay, dropout_probability):
     print(f'Test Accuracy: {test_accuracy}')
 
     # Evaluation Metrics
-    report = classification_report(y_true, y_pred, output_dict=True)
     matrix = confusion_matrix(y_true, y_pred)
-    class_report = classification_report(y_true, y_pred, output_dict=True)
+    report = classification_report(y_true, y_pred)
+    # Get unique labels to use for axis labels
+    labels = sorted(list(set(y_true + y_pred)))
+    df_matrix = pd.DataFrame(matrix, index=labels, columns=labels)
 
-    print(class_report)
+    # Display Confusion Matrix Heat Map
+    plt.figure(figsize=(8,6))
+    sns.heatmap(df_matrix, annot=True, fmt='d', cmap='Blues', cbar=True)
+    plt.title('Confusion Matrix')
+    plt.xlabel('Predicted Label')
+    plt.ylabel('True Label')
+    plt.show()
+    # Classification Report
     print(report)
-    print(matrix)
-
-    total_accuracy = report['accuracy']
-    for key in report.keys():
-        # Print Only Class Values
-        if key.isdigit():
-            # Print in SageMaker-friendly format
-            print(f"pre: {report[key]['precision']:.4f}")
-            print(f"rec: {report[key]['recall']:.4f}")
-            print(f"f1: {report[key]['f1-score']:.4f}")
 
 if __name__ == '__main__':
     # Sagemaker Compatible

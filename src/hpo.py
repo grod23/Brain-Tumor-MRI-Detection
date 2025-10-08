@@ -1,12 +1,10 @@
 import sagemaker
 import boto3
-import pandas as pd
+import pprint
 from sagemaker.inputs import TrainingInput
 from sagemaker.pytorch import PyTorch
 from sagemaker.tuner import HyperparameterTuner, ContinuousParameter, IntegerParameter, HyperparameterTuningJobAnalytics
 from sagemaker.amtviz import visualize_tuning_job
-
-import sys
 
 session = sagemaker.Session()
 region = session.boto_region_name
@@ -94,5 +92,4 @@ print(results['FinalObjectiveValue'])
 tuner = HyperparameterTuner.attach(job_name)
 # Print Latest Tuning Job Description
 job_desc = tuner.describe()
-import pprint
 pprint.pprint(job_desc)
