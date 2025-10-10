@@ -26,13 +26,15 @@ from train import train
 # Outputs: 4 - Normal, Glioma, Meningioma, Pituitary
 
 def main():
-    epochs = 10
-    batch_size = 25
-    learning_rate = .00005
+    epochs = 49
+    batch_size = 8
+    learning_rate = 0.00001
     weight_decay = 0.001
     dropout_probability = 0.3
     # torch.seed()
     train(epochs, batch_size, learning_rate, weight_decay, dropout_probability)
+    # Overfitting begins at epoch 7
+    # Validation stops decreasing by epoch 9/10
 
     # Test Accuracy: 0.8603712671509282
     #               precision    recall  f1-score   support
