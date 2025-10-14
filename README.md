@@ -51,4 +51,5 @@ Incorporating 3D volumetric MRI data
 
 Training on larger, multi-institutional datasets
 
-Exploring more advanced attention-based architectures
+Exploring more advanced attention-based architectures such as CBAM
+
