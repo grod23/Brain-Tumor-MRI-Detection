@@ -1,11 +1,11 @@
 import torch.nn as nn
-
+import sys
 class Model(nn.Module):
     def __init__(self, dropout_probability):
         super(Model, self).__init__()
         # Dropout
         self.dropout_probability = dropout_probability
-        # Image Shape: (Batch Size, Channels, Height, Width) = (32, 1, 224, 224) Gray Scale.
+        # Image Shape: (Batch Size, Channels, Height, Width) = (8, 1, 224, 224) Gray Scale.
         self.cnn = nn.Sequential(
             nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5),
             nn.BatchNorm2d(6),
@@ -38,6 +38,9 @@ class Model(nn.Module):
         X = self.cnn(X)
         # X.size(0) grabs first value of size which is batch size or how many images.
         X = X.view(X.size(0), -1)
+        # print(f'Output Shape: {X.shape}')
+        # Output Shape: torch.Size([8, 46656])
+        # Output Shape: torch.Size([8, 1024])
         X = self.fc_layer(X)
         return X
 

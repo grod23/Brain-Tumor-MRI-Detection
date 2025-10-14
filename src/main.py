@@ -1,4 +1,10 @@
+import matplotlib.pyplot as plt
+
 from train import train
+from model import Model
+from gradcam import GradCAM
+from dataset import MRI, get_data_split
+import torch
 
 # Kaggle Brain MRI Tumor Dataset
 
@@ -26,15 +32,25 @@ from train import train
 # Outputs: 4 - Normal, Glioma, Meningioma, Pituitary
 
 def main():
-    epochs = 49
+    # Hyperparameters
+    epochs = 50
     batch_size = 8
     learning_rate = 0.00001
     weight_decay = 0.001
     dropout_probability = 0.3
-    # torch.seed()
-    train(epochs, batch_size, learning_rate, weight_decay, dropout_probability)
-    # Overfitting begins at epoch 7
-    # Validation stops decreasing by epoch 9/10
+    model = Model(dropout_probability)
+
+    # print(model)
+    train(epochs, batch_size, learning_rate, weight_decay, model)
+
+    _, _, _, _, X_test, y_test = get_data_split()
+    mri = MRI(X_test, y_test)
+    image, label = mri.__getitem__(1)
+    cam = GradCAM(model, target_layer_name='cnn.4')
+    heatmap_image = cam.heatmap_overlay(image, target_class=1)
+    plt.figure(figsize=(10,10))
+    plt.imshow(heatmap_image)
+    plt.show()
 
     # Test Accuracy: 0.8603712671509282
     #               precision    recall  f1-score   support

@@ -4,8 +4,6 @@ import os
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
-from tqdm import tqdm
-
 # Evaluation Metrics
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
@@ -14,18 +12,16 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.optim import AdamW, lr_scheduler
-
 # Python Files
-from model import Model
 from dataset import MRI, get_data_split
 import argparse
 
-def train(epochs, batch_size, learning_rate, weight_decay, dropout_probability):
+def train(epochs, batch_size, learning_rate, weight_decay, model):
     print(f'Device Available: {torch.cuda.is_available()}')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    # Set Model GPU
-    model = Model(dropout_probability).to(device)
+    # Set Model to GPU
+    model.to(device)
     # Loss Function
     loss_fn = nn.CrossEntropyLoss()
     # Couples with Weight Decay
@@ -42,8 +38,7 @@ def train(epochs, batch_size, learning_rate, weight_decay, dropout_probability):
     test_dataset = MRI(X_test, y_test)
 
     # Create DataLoaders
-    training_loader = DataLoader(train_dataset, batch_size=batch_size, num_workers=4,
-                                 shuffle=True)  # Only Shuffle Training Data
+    training_loader = DataLoader(train_dataset, batch_size=batch_size, num_workers=4, shuffle=True)  # Only Shuffle Training Data
     validation_loader = DataLoader(validation_dataset, batch_size=batch_size, num_workers=4, shuffle=False)
     testing_loader = DataLoader(test_dataset, batch_size=batch_size, num_workers=4, shuffle=False)
     # Num_workers specify how many parallel subprocesses are used to load the data
@@ -127,6 +122,7 @@ def train(epochs, batch_size, learning_rate, weight_decay, dropout_probability):
     y_true = []
     y_pred = []
 
+    model.eval()
     with torch.no_grad():
         for X_test, y_test in testing_loader:
             # Use GPU
