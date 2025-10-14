@@ -31,7 +31,7 @@ pip install -r requirements.txt
 python test.py
 ```
 ### Sample MRI Scans: Before and After Preprocessing
-MRI images undergo preprocessing to normalize input, resize shapes, and apply augmentations. 
+MRI images undergo preprocessing to normalize input, resize shapes, equalize histograms, and apply augmentations. 
 
 ### Grad-CAM Visualization
 Interpretability and trust are crucial for an impactful machine learning model, especially in healthcare. Professionals must understand where and why a model is making predictions. To ensure interpretability, Grad-CAM (Gradient-weighted Class Activation Mapping) is used to visualize which regions of the MRI the model focuses on when making a prediction.
@@ -52,4 +52,5 @@ Incorporating 3D volumetric MRI data
 Training on larger, multi-institutional datasets
 
 Exploring more advanced attention-based architectures such as CBAM
+
 
