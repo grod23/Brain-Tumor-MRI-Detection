@@ -5,6 +5,8 @@ from model import Model
 from gradcam import GradCAM
 from dataset import MRI, get_data_split
 import torch
+import numpy as np
+import cv2
 
 # Kaggle Brain MRI Tumor Dataset
 
@@ -32,24 +34,43 @@ import torch
 # Outputs: 4 - Normal, Glioma, Meningioma, Pituitary
 
 def main():
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # Hyperparameters
-    epochs = 50
+    epochs = 30
     batch_size = 8
     learning_rate = 0.00001
     weight_decay = 0.001
     dropout_probability = 0.3
-    model = Model(dropout_probability)
+    model = Model(dropout_probability).to(device)
 
     # print(model)
     train(epochs, batch_size, learning_rate, weight_decay, model)
 
     _, _, _, _, X_test, y_test = get_data_split()
     mri = MRI(X_test, y_test)
-    image, label = mri.__getitem__(1)
+    image, label = mri.__getitem__(640)
+    image = image.to(device)
     cam = GradCAM(model, target_layer_name='cnn.4')
     heatmap_image = cam.heatmap_overlay(image, target_class=1)
-    plt.figure(figsize=(10,10))
+    # Convert image tensor to numpy for visualization
+    image_np = np.uint8(image.detach().cpu().numpy().squeeze())  # Shape: (224, 224)
+
+    # Display side by side
+    plt.figure(figsize=(12, 6))
+
+    # Original image
+    plt.subplot(1, 2, 1)
+    plt.imshow(image_np)
+    plt.title(f"Original MRI Image: {label}")
+    plt.axis('off')
+
+    # Grad-CAM overlay
+    plt.subplot(1, 2, 2)
     plt.imshow(heatmap_image)
+    plt.title("Grad-CAM Overlay")
+    plt.axis('off')
+
+    plt.tight_layout()
     plt.show()
 
     # Test Accuracy: 0.8603712671509282
