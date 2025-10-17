@@ -1,5 +1,6 @@
 import torch.nn as nn
 import sys
+from cbam import CBAM
 class Model(nn.Module):
     def __init__(self, dropout_probability):
         super(Model, self).__init__()
@@ -7,19 +8,21 @@ class Model(nn.Module):
         self.dropout_probability = dropout_probability
         # Image Shape: (Batch Size, Channels, Height, Width) = (8, 1, 224, 224) Gray Scale.
         self.cnn = nn.Sequential(
-            nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5),
+            nn.Conv2d(in_channels=1, out_channels=6, kernel_size=3),
             nn.BatchNorm2d(6),
-            # Consider SILU()
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=5),
+            nn.MaxPool2d(kernel_size=3, stride=5),
 
-            nn.Conv2d(in_channels=6, out_channels=16, kernel_size=5),
+            nn.Conv2d(in_channels=6, out_channels=16, kernel_size=3),
             nn.BatchNorm2d(16),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=5)
+            # Convolutional Block Attention Module
+            CBAM(channels=16, reduction=4),
+            nn.MaxPool2d(kernel_size=3, stride=5)
         )
 
-        # Consider implementing CBAM (Convolutional Block Attention Module)
+
+        self.global_avg = nn.AdaptiveAvgPool2d((1, 1)) # Shape: (B, 16, 1, 1)
 
         self.fc_layer = nn.Sequential(
             nn.Linear(in_features=1024, out_features=256),
@@ -39,8 +42,6 @@ class Model(nn.Module):
         # X.size(0) grabs first value of size which is batch size or how many images.
         X = X.view(X.size(0), -1)
         # print(f'Output Shape: {X.shape}')
-        # Output Shape: torch.Size([8, 46656])
-        # Output Shape: torch.Size([8, 1024])
         X = self.fc_layer(X)
         return X
 

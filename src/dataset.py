@@ -153,19 +153,36 @@ def get_data_split():
     return np.array(X_train), torch.LongTensor(y_train), np.array(X_val), torch.LongTensor(y_val), np.array(
         X_testing), torch.LongTensor(y_testing)
 
-def compute(image_paths):
+
+def compute(image_paths, target_size=(224, 224)):
     pixel_values = []
 
     for path in image_paths:
-        # Read grayscale image as float32 in range [0, 1]
-        img = cv2.imread(path, cv2.IMREAD_GRAYSCALE).astype(np.float32) / 255.0
+        # Read grayscale image
+        img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+        if img is None:
+            raise ValueError(f"Failed to load image: {path}")
+
+        # Resize to target size (same as model input)
+        img = cv2.resize(img, target_size, interpolation=cv2.INTER_AREA)
+
+        # Convert to float32 in [0, 255] (do NOT divide by 255 yet!)
+        img = img.astype(np.float32)  # Keep in [0, 255] for stats
+
+        # Optional: mask background to ignore black regions
+        # foreground = img[img > 10]  # only if you want robust stats
+        # if len(foreground) > 0:
+        #     pixel_values.append(foreground)
+        # else:
+        #     pixel_values.append(img.flatten())
+
         pixel_values.append(img.flatten())
 
-    # Concatenate all pixels from all images
+    # Now all flattened arrays have same length: 224*224 = 50176
     all_pixels = np.concatenate(pixel_values)
 
-    mean = np.mean(all_pixels)
-    std = np.std(all_pixels)
+    mean = np.mean(all_pixels) / 255.0
+    std = np.std(all_pixels) / 255.0
 
     return mean, std
 
@@ -178,8 +195,8 @@ class MRI(Dataset):
         # Resize, Adjust Tensor Shape, Min-Max Normalization, Z-Score Normalization
         self.transform = transforms.Compose([transforms.ToPILImage(),
                                              transforms.Resize((224, 224)),
-                                             transforms.ToTensor(),
-                                             transforms.Normalize(mean=[0.1891], std=[0.1936])
+                                             transforms.ToTensor()
+                                             # transforms.Normalize(mean=[0.19], std=[0.19])
                                              ])
         self.testing = testing
 
@@ -189,9 +206,6 @@ class MRI(Dataset):
     def __getitem__(self, index):
         image_path = self.image_paths[index]
 
-        #if not self.testing:
-            #print(f'Training Image Path: {image_path}')
-
         label = self.labels[index]
 
         # Load Image on Demand
@@ -200,7 +214,7 @@ class MRI(Dataset):
         # Preprocessing
 
         # Histogram Equalization
-        image = cv2.equalizeHist(image)
+        # image = cv2.equalizeHist(image)
 
         # if self.testing:
         #     # Noise Reduction:
@@ -214,6 +228,25 @@ class MRI(Dataset):
         #     # No augmented images
 
         # Normalize and Resize
+
+        # # Step 1: Threshold to isolate brain region
+        # _, thresh = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        #
+        # # Step 2: Morphological cleaning
+        # kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+        # clean = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+        # clean = cv2.morphologyEx(clean, cv2.MORPH_CLOSE, kernel)
+        #
+        # # Step 3: Find largest contour (brain)
+        # contours, _ = cv2.findContours(clean, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # if contours:
+        #     largest = max(contours, key=cv2.contourArea)
+        #     mask = np.zeros_like(image)
+        #     cv2.drawContours(mask, [largest], -1, 255, thickness=cv2.FILLED)
+        #
+        #     # Step 4: Mask the brain
+        #     image = cv2.bitwise_and(image, image, mask=mask)
+
         image = self.transform(image)
 
         return image, label

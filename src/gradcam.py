@@ -39,11 +39,6 @@ class GradCAM:
         self.target_layer.register_full_backward_hook(backward_hook)
 
     def generate(self, image, target_class=None):
-        plt.figure(figsize=(10, 10))
-        plt.imshow(image.permute(1, 2, 0).cpu().detach().numpy())
-        plt.title('Original Generate Image')
-        plt.show()
-
         # Only need Height and Width
         image_shape = (image.shape[1], image.shape[2])
         # Compute Gradients
@@ -65,56 +60,27 @@ class GradCAM:
         # Remove all negative values
         cam = F.relu(cam)
         # Upsample to match original image shape
-        cam = F.interpolate(cam, image_shape, mode="bilinear", align_corners=False)
+        cam = F.interpolate(cam, image_shape, mode="bilinear", align_corners=False) # Shape: (1, 1, 224, 224)
 
-        print(f"Data type: {image.dtype}")
-        print(f"Min value: {image.min()}")
-        print(f"Max value: {image.max()}")
-        print(f'Cam Shape: {cam.shape}')
         # Min Max Normalization
-        # B, C, H, W = cam.shape
-        # cam = cam.view(B, -1)
-        # print(f'Cam Shape: {cam.shape}')
-        # cam -= cam.min(dim=1, keepdim=True)[0]
-        # cam /= cam.max(dim=1, keepdim=True)[0]
-        # cam = cam.view(B, H, W, C).squeeze(0).cpu().detach().numpy()
+        B, C, H, W = cam.shape
+        cam = cam.view(B, -1)
+        cam -= cam.min(dim=1, keepdim=True)[0]
+        cam /= cam.max(dim=1, keepdim=True)[0]
+        cam = cam.view(B, H, W, C).squeeze(0).cpu().detach().numpy() # Shape: (224, 224, 1)
+        cam = np.uint8(cam * 255).squeeze(2) # Shape: (224, 224)
 
-        # print(f"Data type: {image.dtype}")
-        # print(f"Min value: {image.min()}")
-        # print(f"Max value: {image.max()}")
-
-        cam = cam.squeeze(0).permute(1, 2, 0).detach().cpu().numpy()
-        img_min, img_max = cam.min(), cam.max()
-        if img_max > img_min:
-            # Stretch to full range
-            cam = ((cam - img_min) / (img_max - img_min) * 255).astype(np.uint8)
-        else:
-            raise Exception("Division by Zero!")
-
-        cam = np.uint8(cam.squeeze(2))
-        print(f'Cam Shape: {cam.shape}')
         plt.figure(figsize=(10, 10))
         plt.imshow(cam)
-        plt.title('GradCAM')
+        plt.title(f'GradCAM, Prediction: {target_class}')
         plt.show()
 
-        # cam = np.uint8(cam * 255)
-        self.heat_map = cam # Shape: [1, H, W]
+        self.heat_map = cam # Shape: (224, 224)
 
     def heatmap_overlay(self, image, target_class, alpha=0.4):
         self.generate(image, target_class)
         # Image and Heatmap must be numpy array of shape [224, 224, 3]
-        image = np.uint8(image.permute(1, 2, 0).detach().cpu().numpy())
-
-        # 🔑 CRITICAL: Rescale from [0, 4] → [0, 255]
-        # Since max=4, we can multiply by (255/4) = 63.75
-        # But better to do it generically:
-        img_min, img_max = image.min(), image.max()
-        if img_max > img_min:
-            # Stretch to full range
-            image = ((image - img_min) / (img_max - img_min) * 255).astype(np.uint8)
-        else:
-            raise Exception("Division by Zero!")
+        image = (image.permute(1, 2, 0).cpu().detach().numpy() * 255).astype(np.uint8)
 
         # Original image
         plt.figure(figsize=(10, 10))
@@ -144,6 +110,9 @@ class GradCAM:
         # Turns Image and Heatmap to numpy array of shape[224, 224, 3]
         print(f'Image Shape: {image.shape}')
         print(f'Heatmap Shape: {self.heat_map.shape}')
+
+        print(image.dtype)
+        print(self.heat_map.dtype)
         overlay_image = cv2.addWeighted(image, alpha, self.heat_map, 1 - alpha, 0)
 
         # Overlay image
