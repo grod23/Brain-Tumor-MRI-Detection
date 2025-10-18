@@ -160,21 +160,21 @@ def train(epochs, batch_size, learning_rate, weight_decay, model):
     # Classification Report
     print(report)
 
-if __name__ == '__main__':
-    # Sagemaker Compatible
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--epochs', type=int, default=20)
-    parser.add_argument('--batch_size', type=int, default=5)
-    parser.add_argument('--learning_rate', type=float, default=0.0001)
-    parser.add_argument('--weight_decay', type=float, default=0.001)
-    parser.add_argument('--dropout_probability', type=float, default=0.3)
-
-    args = parser.parse_args()
-
-    train(
-        epochs=args.epochs,
-        batch_size=args.batch_size,
-        learning_rate=args.learning_rate,
-        weight_decay=args.weight_decay,
-        dropout_probability=args.dropout_probability
-    )
+# if __name__ == '__main__':
+#     # Sagemaker Compatible
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument('--epochs', type=int, default=20)
+#     parser.add_argument('--batch_size', type=int, default=5)
+#     parser.add_argument('--learning_rate', type=float, default=0.0001)
+#     parser.add_argument('--weight_decay', type=float, default=0.001)
+#     parser.add_argument('--dropout_probability', type=float, default=0.3)
+#
+#     args = parser.parse_args()
+#
+#     train(
+#         epochs=args.epochs,
+#         batch_size=args.batch_size,
+#         learning_rate=args.learning_rate,
+#         weight_decay=args.weight_decay,
+#         dropout_probability=args.dropout_probability
+#     )

@@ -38,30 +38,21 @@ import sys
 def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # Hyperparameters
-    epochs = 45
+    epochs = 50
     batch_size = 8
     learning_rate = 0.00001
-    weight_decay = 0.001
+    weight_decay = 0.003
     dropout_probability = 0.3
     model = Model(dropout_probability).to(device)
 
-    # print(model)
+    print(model)
+
     train(epochs, batch_size, learning_rate, weight_decay, model)
 
     _, _, _, _, X_test, y_test = get_data_split()
     mri = MRI(X_test, y_test)
-    cam = GradCAM(model, target_layer_name='cnn.4')
+    cam = GradCAM(model, target_layer_name='cnn.17')
 
-    # image, label = mri.__getitem__(500)
-    # image = image.view(image.shape[2], image.shape[1], image.shape[0])
-    # print(f'Label : {label}')
-    # print(f"Data type: {image.dtype}")
-    # print(f"Min value: {image.min()}")
-    # print(f"Max value: {image.max()}")
-    # plt.figure(figsize=(10,10))
-    # plt.imshow(image)
-    # plt.show()
-    # sys.exit()
     for i in range(10):
         random_index = random.randint(1, 1238)
         image, label = mri.__getitem__(random_index)
@@ -69,29 +60,7 @@ def main():
         print(f'Image Plot Shape: {image.shape}')
         image = image.to(device)
         # GradCAM Image
-        heatmap_image = cam.heatmap_overlay(image, target_class=None)
-    # cam = GradCAM(model, target_layer_name='cnn.4')
-    # heatmap_image = cam.heatmap_overlay(image, target_class=None)
-    # # Convert image tensor to numpy for visualization
-    # image_np = (image.permute(1, 2, 0).cpu().detach().numpy() * 255).astype(np.uint8)  # Shape: (224, 224)
-    #
-    # # Display side by side
-    # plt.figure(figsize=(12, 6))
-    #
-    # # Original image
-    # plt.subplot(1, 2, 1)
-    # plt.imshow(image_np)
-    # plt.title(f"Original MRI Image: {label}")
-    # plt.axis('off')
-    #
-    # # Grad-CAM overlay
-    # plt.subplot(1, 2, 2)
-    # plt.imshow(heatmap_image)
-    # plt.title("Grad-CAM Overlay")
-    # plt.axis('off')
-    #
-    # plt.tight_layout()
-    # plt.show()
+        heatmap_image = cam.heatmap_overlay(image, target_class=label)
 
     # Test Accuracy: 0.8603712671509282
     #               precision    recall  f1-score   support

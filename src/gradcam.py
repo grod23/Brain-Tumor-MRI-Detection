@@ -50,13 +50,13 @@ class GradCAM:
 
         # Reset Gradient
         self.model.zero_grad()
-        loss = prediction[:, target_class]
+        loss = prediction[0, target_class]
         loss.backward()
 
         # Compute weights: global average pooling of gradients
-        gradients = F.adaptive_avg_pool2d(self.gradients,1 )  # shape: [B, C, 1, 1]
+        weights = F.adaptive_avg_pool2d(self.gradients, 1)  # shape: [B, C, 1, 1]
         # Weighted sum of activations
-        cam = torch.mul(gradients, self.activations).sum(dim=1, keepdim=True)
+        cam = (weights * self.activations).sum(dim=1, keepdim=True)  # shape: [B, 1, H, W]
         # Remove all negative values
         cam = F.relu(cam)
         # Upsample to match original image shape
@@ -67,8 +67,9 @@ class GradCAM:
         cam = cam.view(B, -1)
         cam -= cam.min(dim=1, keepdim=True)[0]
         cam /= cam.max(dim=1, keepdim=True)[0]
-        cam = cam.view(B, H, W, C).squeeze(0).cpu().detach().numpy() # Shape: (224, 224, 1)
-        cam = np.uint8(cam * 255).squeeze(2) # Shape: (224, 224)
+        cam = cam.view(B, C, H, W)
+        cam = cam.squeeze().cpu().detach().numpy()  # Shape: [H, W]
+        cam = np.uint8(cam * 255)  # Shape: [H, W]
 
         plt.figure(figsize=(10, 10))
         plt.imshow(cam)
@@ -107,12 +108,6 @@ class GradCAM:
         plt.title("Heat MRI Image")
         plt.axis('off')
 
-        # Turns Image and Heatmap to numpy array of shape[224, 224, 3]
-        print(f'Image Shape: {image.shape}')
-        print(f'Heatmap Shape: {self.heat_map.shape}')
-
-        print(image.dtype)
-        print(self.heat_map.dtype)
         overlay_image = cv2.addWeighted(image, alpha, self.heat_map, 1 - alpha, 0)
 
         # Overlay image
