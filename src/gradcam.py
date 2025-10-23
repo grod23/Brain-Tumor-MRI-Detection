@@ -62,18 +62,20 @@ class GradCAM:
         # Upsample to match original image shape
         cam = F.interpolate(cam, image_shape, mode="bilinear", align_corners=False) # Shape: (1, 1, 224, 224)
 
-        # Min Max Normalization
+        # Percentile-based normalization
         B, C, H, W = cam.shape
-        cam = cam.view(B, -1)
-        cam -= cam.min(dim=1, keepdim=True)[0]
-        cam /= cam.max(dim=1, keepdim=True)[0]
-        cam = cam.view(B, C, H, W)
-        cam = cam.squeeze().cpu().detach().numpy()  # Shape: [H, W]
-        cam = np.uint8(cam * 255)  # Shape: [H, W]
+        cam_np = cam.cpu().detach().numpy()
+        # Use 95th percentile as max instead of actual max
+        p98 = np.percentile(cam_np, 98)
+        cam_np = np.clip(cam_np, 0, p98)
+        cam_np = (cam_np - cam_np.min()) / (p98 - cam_np.min() + 1e-8)
+        cam = torch.from_numpy(cam_np).view(B, C, H, W)
+        cam = cam.squeeze().cpu().detach().numpy()
+        cam = np.uint8(cam * 255)
 
         plt.figure(figsize=(10, 10))
         plt.imshow(cam)
-        plt.title(f'GradCAM, Prediction: {target_class}')
+        plt.title(f'GradCAM, Class: {target_class} Prediction: {prediction.argmax()}')
         plt.show()
 
         self.heat_map = cam # Shape: (224, 224)
@@ -89,23 +91,23 @@ class GradCAM:
         plt.imshow(image)
         plt.title("Original MRI Image")
         plt.axis('off')
-        print(f'Image Shape: {image.shape}')
-        print(f'Heatmap Shape: {self.heat_map.shape}')
 
-        image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+        # image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+        # image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
 
         # Original image
         plt.subplot(1, 4, 2)
         plt.imshow(image)
-        plt.title("Original MRI Image")
+        plt.title("Before ColorMap MRI Image")
         plt.axis('off')
 
-        self.heat_map = cv2.applyColorMap(self.heat_map, cv2.COLORMAP_JET)
+        self.heat_map = cv2.applyColorMap(self.heat_map, cv2.COLORMAP_HOT)
+        self.heat_map = cv2.cvtColor(self.heat_map, cv2.COLOR_BGR2RGB)
 
         # Heat Map image
         plt.subplot(1, 4, 3)
         plt.imshow(self.heat_map)
-        plt.title("Heat MRI Image")
+        plt.title("Heatmap MRI Image")
         plt.axis('off')
 
         overlay_image = cv2.addWeighted(image, alpha, self.heat_map, 1 - alpha, 0)

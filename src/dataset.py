@@ -5,12 +5,15 @@ import re
 import sys
 
 import cv2
+import matplotlib.pyplot as plt
 import torch
+from IPython.core.pylabtools import figsize
 from sklearn.model_selection import train_test_split, GroupShuffleSplit
 from torch.utils.data import Dataset
 from torchvision import transforms
 import numpy as np
 from collections import defaultdict
+import imutils
 
 
 # Download latest version
@@ -169,13 +172,6 @@ def compute(image_paths, target_size=(224, 224)):
         # Convert to float32 in [0, 255] (do NOT divide by 255 yet!)
         img = img.astype(np.float32)  # Keep in [0, 255] for stats
 
-        # Optional: mask background to ignore black regions
-        # foreground = img[img > 10]  # only if you want robust stats
-        # if len(foreground) > 0:
-        #     pixel_values.append(foreground)
-        # else:
-        #     pixel_values.append(img.flatten())
-
         pixel_values.append(img.flatten())
 
     # Now all flattened arrays have same length: 224*224 = 50176
@@ -186,7 +182,43 @@ def compute(image_paths, target_size=(224, 224)):
 
     return mean, std
 
+# Will crop and resize image
+# Image already grayscale
+def crop_image(image, path):
+    # Reduce noise and smooth image.
+    new_image = cv2.GaussianBlur(image,(5, 5), 0)
 
+    # Converts image to binary (black and white) pixels above 45 are white(255). Pixels below 45 become black(0).
+    # Isolates bright regions in MRI(brain tissue).
+    new_image = cv2.threshold(new_image, 28, 255, cv2.THRESH_BINARY)[1]
+
+    # Morphological Operations to smooth and clean binary mask:
+    # Helps see contours easily, removes small white noise.
+    new_image = cv2.erode(new_image, None, iterations=2)
+    # Expands white areas back to original size.
+    new_image = cv2.dilate(new_image, None, iterations=2)
+
+    # Send as copy so data is not lost, retrieves only outermost contours(RETR_EXTERNAL).
+    contours = cv2.findContours(new_image.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    contours = imutils.grab_contours(contours)
+
+    # Safety Check
+    if not contours:
+        print("[WARNING] No contours found!")
+        print(path)
+        return image
+
+    # Get the largest contour by measuring the area. The largest contour should be the brain tissue.
+    contours = max(contours, key=cv2.contourArea)
+    # Bounding boxes of contour/brain tissue. Need left, right, top, and bottom.
+    ext_left = tuple(contours[contours[:, : , 0].argmin()])[0]
+    ext_right = tuple(contours[contours[:, :, 0].argmax()])[0]
+    ext_top = tuple(contours[contours[:, :, 1].argmin()])[0]
+    ext_bottom = tuple(contours[contours[:, :, 1].argmax()])[0]
+
+    # Slice the image through rectangular bounding box.
+    cropped_image = image[ext_top[1]: ext_bottom[1], ext_left[0]: ext_right[0]]
+    return cropped_image
 
 class MRI(Dataset):
     def __init__(self, image_paths, labels, testing=False):
@@ -195,6 +227,8 @@ class MRI(Dataset):
         # Resize, Adjust Tensor Shape, Min-Max Normalization, Z-Score Normalization
         self.transform = transforms.Compose([transforms.ToPILImage(),
                                              transforms.Resize((224, 224)),
+                                             # Small shifts
+                                             # transforms.RandomAffine(degrees=5, translate=(0.05, 0.05), fill=0),
                                              transforms.ToTensor()
                                              # transforms.Normalize(mean=[0.19], std=[0.19])
                                              ])
@@ -211,42 +245,10 @@ class MRI(Dataset):
         # Load Image on Demand
         image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
 
-        # Preprocessing
-
-        # Histogram Equalization
-        # image = cv2.equalizeHist(image)
-
-        # if self.testing:
-        #     # Noise Reduction:
-        #     # For Salt and Pepper Noise
-        #     image = cv2.medianBlur(image, 3)  # Kernel Size must be odd
-        #
-        #     # Bilateral Filter to smooth preserve edges very well
-        #     image = cv2.bilateralFilter(image, d=3, sigmaColor=10, sigmaSpace=10)
-        #
-        #     # For testing:
-        #     # No augmented images
+        # Crop Image
+        image = crop_image(image, image_path)
 
         # Normalize and Resize
-
-        # # Step 1: Threshold to isolate brain region
-        # _, thresh = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        #
-        # # Step 2: Morphological cleaning
-        # kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
-        # clean = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
-        # clean = cv2.morphologyEx(clean, cv2.MORPH_CLOSE, kernel)
-        #
-        # # Step 3: Find largest contour (brain)
-        # contours, _ = cv2.findContours(clean, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        # if contours:
-        #     largest = max(contours, key=cv2.contourArea)
-        #     mask = np.zeros_like(image)
-        #     cv2.drawContours(mask, [largest], -1, 255, thickness=cv2.FILLED)
-        #
-        #     # Step 4: Mask the brain
-        #     image = cv2.bitwise_and(image, image, mask=mask)
-
         image = self.transform(image)
 
         return image, label

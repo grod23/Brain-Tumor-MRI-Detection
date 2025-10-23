@@ -5,8 +5,6 @@ from model import Model
 from gradcam import GradCAM
 from dataset import MRI, get_data_split, compute
 import torch
-import numpy as np
-import cv2
 import random
 import sys
 
@@ -38,41 +36,27 @@ import sys
 def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # Hyperparameters
-    epochs = 50
-    batch_size = 8
-    learning_rate = 0.00001
-    weight_decay = 0.003
+    epochs = 30
+    batch_size = 16
+    learning_rate = 0.0001
+    weight_decay = 0.005
     dropout_probability = 0.3
     model = Model(dropout_probability).to(device)
 
     print(model)
-
     train(epochs, batch_size, learning_rate, weight_decay, model)
 
     _, _, _, _, X_test, y_test = get_data_split()
     mri = MRI(X_test, y_test)
     cam = GradCAM(model, target_layer_name='cnn.17')
 
-    for i in range(10):
+    for i in range(50):
         random_index = random.randint(1, 1238)
         image, label = mri.__getitem__(random_index)
         print(f'Label : {label}')
-        print(f'Image Plot Shape: {image.shape}')
         image = image.to(device)
         # GradCAM Image
         heatmap_image = cam.heatmap_overlay(image, target_class=label)
-
-    # Test Accuracy: 0.8603712671509282
-    #               precision    recall  f1-score   support
-    #
-    #            0       0.85      0.85      0.85       164
-    #            1       0.87      0.83      0.84       373
-    #            2       0.86      0.78      0.82       371
-    #            3       0.86      0.99      0.92       331
-    #
-    #     accuracy                           0.86      1239
-    #    macro avg       0.86      0.86      0.86      1239
-    # weighted avg       0.86      0.86      0.86      1239
 
     # Visualizing Feature Maps
     # num_layers = 0

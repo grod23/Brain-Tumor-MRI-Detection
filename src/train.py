@@ -72,10 +72,15 @@ def train(epochs, batch_size, learning_rate, weight_decay, model):
             optimizer.step()
             # Update Epoch Loss
             epoch_loss += loss.item()
+            # Track training accuracy
+            correct += (y_predicted.argmax(dim=1) == y_batch).sum().item()
+            total += y_batch.size(0)
+
 
         train_loss = epoch_loss / len(training_loader)
+        train_accuracy = correct / total
         loss_track.append(train_loss)
-        print(f'Epoch: {epoch}, Training Loss: {train_loss}')
+        print(f'Epoch: {epoch}, Training Loss: {train_loss}, Training Accuracy: {train_accuracy}')
 
         # Validation for the current epoch
         model.eval()
