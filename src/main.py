@@ -6,7 +6,6 @@ from gradcam import GradCAM
 from dataset import MRI, get_data_split, compute
 import torch
 import random
-import sys
 
 # Kaggle Brain MRI Tumor Dataset
 
@@ -34,12 +33,13 @@ import sys
 # Outputs: 4 - Normal, Glioma, Meningioma, Pituitary
 
 def main():
+    torch.manual_seed(42)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # Hyperparameters
     epochs = 30
     batch_size = 16
     learning_rate = 0.0001
-    weight_decay = 0.005
+    weight_decay = 0.003
     dropout_probability = 0.3
     model = Model(dropout_probability).to(device)
 
@@ -48,7 +48,7 @@ def main():
 
     _, _, _, _, X_test, y_test = get_data_split()
     mri = MRI(X_test, y_test)
-    cam = GradCAM(model, target_layer_name='cnn.17')
+    cam = GradCAM(model, target_layer_name='cnn.8')
 
     for i in range(50):
         random_index = random.randint(1, 1238)
@@ -57,6 +57,23 @@ def main():
         image = image.to(device)
         # GradCAM Image
         heatmap_image = cam.heatmap_overlay(image, target_class=label)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     # Visualizing Feature Maps
     # num_layers = 0

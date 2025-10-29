@@ -133,8 +133,6 @@ def get_data_split():
 
     print(f'X Train: {len(X_train)}')
     print(f'y Train: {len(y_train)}')
-    print(f'X Test: {len(X_testing)}')
-    print(f'Y test: {len(y_testing)}')
 
     X_val, X_test, y_val, y_test = train_test_split(X_testing, y_testing, test_size=0.5, random_state=42, stratify=y_testing)
 

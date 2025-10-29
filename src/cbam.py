@@ -24,7 +24,7 @@ class CBAM(nn.Module):
 
 class Channel_Gate(nn.Module):
     # Reductions used to reduce feature maps
-    def __init__(self, gate_channels, reduction=4):
+    def __init__(self, gate_channels, reduction):
         super(Channel_Gate, self).__init__()
         # Squeeze Excitation Module
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
@@ -54,8 +54,8 @@ class Spatial_Gate(nn.Module):
     def __init__(self):
         super(Spatial_Gate, self).__init__()
         # Gaussian Center Weight Map
-        self.center_weight = gaussian_weight_map(size=224, sigma=0.1).to(device)
-        self.bias_strength = 1.0
+        self.center_weight = gaussian_weight_map(size=224, sigma=0.2).to(device)
+        self.bias_strength = 10.0
         self.kernel_size = 7
         self.compress = Channel_Pool()
         self.spatial = nn.Conv2d(in_channels=2, out_channels=1, kernel_size=self.kernel_size, padding=(self.kernel_size-1) // 2, bias=False)
@@ -72,7 +72,7 @@ class Spatial_Gate(nn.Module):
         center_bias = nn.functional.interpolate(self.center_weight, size=current_size,
                                          mode='bilinear', align_corners=False)
         # Add center bias to gradients
-        # X_compress = center_bias + X_compress * self.bias_strength
+        X_compress = (self.bias_strength * center_bias) + X_compress
         X_compress = self.sigmoid(X_compress)
         refined_X = X * X_compress
 

@@ -3,7 +3,6 @@ import torch
 import torch.nn.functional as F
 import cv2
 import matplotlib.pyplot as plt
-import sys
 
 class GradCAM:
     def __init__(self, model, target_layer_name):
@@ -65,10 +64,10 @@ class GradCAM:
         # Percentile-based normalization
         B, C, H, W = cam.shape
         cam_np = cam.cpu().detach().numpy()
-        # Use 95th percentile as max instead of actual max
-        p98 = np.percentile(cam_np, 98)
-        cam_np = np.clip(cam_np, 0, p98)
-        cam_np = (cam_np - cam_np.min()) / (p98 - cam_np.min() + 1e-8)
+        # Use 99th percentile as max instead of actual max
+        p99 = np.percentile(cam_np, 99)
+        cam_np = np.clip(cam_np, 0, p99)
+        cam_np = (cam_np - cam_np.min()) / (p99 - cam_np.min() + 1e-8)
         cam = torch.from_numpy(cam_np).view(B, C, H, W)
         cam = cam.squeeze().cpu().detach().numpy()
         cam = np.uint8(cam * 255)
@@ -92,8 +91,7 @@ class GradCAM:
         plt.title("Original MRI Image")
         plt.axis('off')
 
-        # image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
-        # image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+        image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
 
         # Original image
         plt.subplot(1, 4, 2)
@@ -102,7 +100,6 @@ class GradCAM:
         plt.axis('off')
 
         self.heat_map = cv2.applyColorMap(self.heat_map, cv2.COLORMAP_HOT)
-        self.heat_map = cv2.cvtColor(self.heat_map, cv2.COLOR_BGR2RGB)
 
         # Heat Map image
         plt.subplot(1, 4, 3)

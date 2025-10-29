@@ -1,12 +1,10 @@
-import sys
-import os
 # Graphing Library
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 # Evaluation Metrics
 from sklearn.metrics import classification_report
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import confusion_matrix
 # Neural Network Libraries
 import torch
 import torch.nn as nn
@@ -15,6 +13,9 @@ from torch.optim import AdamW, lr_scheduler
 # Python Files
 from dataset import MRI, get_data_split
 import argparse
+import sys
+import os
+
 
 def train(epochs, batch_size, learning_rate, weight_decay, model):
     print(f'Device Available: {torch.cuda.is_available()}')
@@ -44,11 +45,9 @@ def train(epochs, batch_size, learning_rate, weight_decay, model):
     # Num_workers specify how many parallel subprocesses are used to load the data
     # DataLoaders also add Batch Size to Shape: (batch_size, 1, 224, 224)
 
-    # Loss Tracking
+    # Training:
     loss_track = []
-    # Validation Tracking
-    val_track = []
-    # Training
+    val_loss_track = []
     for epoch in range(epochs):
         # Accuracy
         correct = 0
@@ -86,40 +85,41 @@ def train(epochs, batch_size, learning_rate, weight_decay, model):
         model.eval()
         # No Gradient Calculation
         with torch.no_grad():
-            epoch_loss = 0
+            val_epoch_loss = 0
+            val_correct = 0
+            val_total = 0
             for X_val, y_val in validation_loader:
                 # Use GPU
                 X_val, y_val = X_val.to(device), y_val.to(device)
                 y_predicted = model(X_val)
                 loss = loss_fn(y_predicted, y_val)
                 # Track Loss
-                epoch_loss += loss.item()
+                val_epoch_loss += loss.item()
                 # Track Accuracy
-                correct += (y_predicted.argmax(dim=1) == y_val).sum().item()
-                total += y_val.size(0)
+                val_correct += (y_predicted.argmax(dim=1) == y_val).sum().item()
+                val_total += y_val.size(0)
 
-        avg_val_loss = epoch_loss / len(validation_loader)
+        avg_val_loss = val_epoch_loss / len(validation_loader)
         # Update Learning Rate
         scheduler.step(avg_val_loss)
         # Track Validation Loss
-        val_track.append(avg_val_loss)
+        val_loss_track.append(avg_val_loss)
         # Print Statements
         print(f'Training Epoch: {epoch}, Validation Loss: {avg_val_loss}')
-        print(f'Correct: {correct}, Total Images: {total}')
-        print(f'Validation Accuracy: {correct / total}')
+        print(f'Correct: {val_correct}, Total Images: {val_total}')
+        print(f'Validation Accuracy: {val_correct / val_total}')
 
     # Visualize Training and Validation Loss
     plt.figure(figsize=(15, 9))
     plt.plot(loss_track, c='b', label='Train Loss')
-    plt.plot(val_track, c='r', label='Validation Loss')
+    plt.plot(val_loss_track, c='r', label='Validation Loss')
     plt.legend()
     plt.grid()
     plt.xlabel('Epochs', fontsize=20)
     plt.ylabel('Loss', fontsize=20)
     plt.show()
 
-    # Testing
-
+    # Testing:
     # Accuracy
     test_correct = 0
     test_total = 0
@@ -143,12 +143,11 @@ def train(epochs, batch_size, learning_rate, weight_decay, model):
             test_correct += (y_prediction.argmax(dim=1)==y_test).sum().item()
             test_total += y_test.size(0)
 
-
+    # Evaluation Metrics
     test_accuracy = test_correct / test_total
     print(f'Correct: {test_correct}, Total: {test_total}')
     print(f'Test Accuracy: {test_accuracy}')
 
-    # Evaluation Metrics
     matrix = confusion_matrix(y_true, y_pred)
     report = classification_report(y_true, y_pred)
     # Get unique labels to use for axis labels
