@@ -1,14 +1,13 @@
-import matplotlib.pyplot as plt
-
 from train import train
 from model import Model
 from gradcam import GradCAM
 from dataset import MRI, get_data_split, compute
 import torch
 import random
+import numpy as np
+import matplotlib.pyplot as plt
 
 # Kaggle Brain MRI Tumor Dataset
-
 # Crystal Clean Version: No Duplicates, Proper Labels, and Consistent Size
 # https://www.kaggle.com/datasets/mohammadhossein77/brain-tumors-dataset
 
@@ -22,21 +21,23 @@ import random
 # After Image Processing
 # Tumor: 2568
 # Normal: 438
-# image Shape: (224, 224, 3) 224x224, 3 Color Channels
+# image Shape: (224, 224, 1) 224x224, 1 Color Channel
 
 # Activation Function: ReLU
 # Optimizer: ADAM
 
 # To Identify Type of Tumor:
 # Loss Function: Cross Entropy
-# Inputs: 7 Images
+# Inputs: 1 Image
 # Outputs: 4 - Normal, Glioma, Meningioma, Pituitary
 
 def main():
-    torch.manual_seed(42)
+    torch.manual_seed(51)
+    np.random.seed(51)
+    random.seed(51)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # Hyperparameters
-    epochs = 30
+    epochs = 50
     batch_size = 16
     learning_rate = 0.0001
     weight_decay = 0.003
@@ -48,7 +49,7 @@ def main():
 
     _, _, _, _, X_test, y_test = get_data_split()
     mri = MRI(X_test, y_test)
-    cam = GradCAM(model, target_layer_name='cnn.8')
+    cam = GradCAM(model, target_layer_name='cnn.13')
 
     for i in range(50):
         random_index = random.randint(1, 1238)
@@ -57,21 +58,6 @@ def main():
         image = image.to(device)
         # GradCAM Image
         heatmap_image = cam.heatmap_overlay(image, target_class=label)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
