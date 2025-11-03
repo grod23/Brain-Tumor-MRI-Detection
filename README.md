@@ -37,17 +37,16 @@ MRI images undergo preprocessing to normalize input, resize shapes, equalize his
 Interpretability and trust are crucial for an impactful machine learning model, especially in healthcare. Professionals must understand where and why a model is making predictions. To ensure interpretability, Grad-CAM (Gradient-weighted Class Activation Mapping) is used to visualize which regions of the MRI the model focuses on when making a prediction.
 
 ### Classification Report
-              precision    recall  f1-score   support
+                precision    recall  f1-score   support
 
-           0       0.87      0.96      0.92       164
-           1       0.90      0.83      0.87       373
-           2       0.87      0.81      0.84       371
-           3       0.90      0.99      0.94       331
+    Glioma           0.89      0.95      0.92       164
+    Meningioma       0.91      0.84      0.87       373
+    Pituitary        0.85      0.82      0.84       371
+    No Tumpr         0.90      0.99      0.94       331
 
-    accuracy                           0.89      1239
-   macro avg       0.88      0.90      0.89      1239
-weighted avg       0.89      0.89      0.88      1239
-
+    accuracy                               0.89      1239
+    macro avg          0.89     0.90       0.89      1239
+    weighted avg       0.89      0.89      0.89      1239
 
 ### Confusion Matrix
 The confusion matrix helps to understand where the model is confusing different tumor types.
@@ -62,6 +61,7 @@ Incorporating 3D volumetric MRI data
 Training on larger, multi-institutional datasets
 
 Exploring more advanced attention-based architectures such as CBAM
+
 
 
 
