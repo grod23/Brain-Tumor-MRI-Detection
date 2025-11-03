@@ -42,9 +42,9 @@ Interpretability and trust are crucial for an impactful machine learning model, 
     Glioma           0.89      0.95      0.92       164
     Meningioma       0.91      0.84      0.87       373
     Pituitary        0.85      0.82      0.84       371
-    No Tumpr         0.90      0.99      0.94       331
+    No Tumor         0.90      0.99      0.94       331
 
-    accuracy                             0.89      1239
+    Accuracy                             0.89      1239
     macro avg        0.89     0.90       0.89      1239
     weighted avg     0.89     0.89       0.89      1239
 
@@ -61,6 +61,7 @@ Incorporating 3D volumetric MRI data
 Training on larger, multi-institutional datasets
 
 Exploring more advanced attention-based architectures such as CBAM
+
 
 
 
