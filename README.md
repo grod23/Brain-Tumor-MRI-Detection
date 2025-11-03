@@ -44,9 +44,9 @@ Interpretability and trust are crucial for an impactful machine learning model, 
     Pituitary        0.85      0.82      0.84       371
     No Tumpr         0.90      0.99      0.94       331
 
-    accuracy                               0.89      1239
-    macro avg          0.89     0.90       0.89      1239
-    weighted avg       0.89      0.89      0.89      1239
+    accuracy                             0.89      1239
+    macro avg        0.89     0.90       0.89      1239
+    weighted avg     0.89     0.89       0.89      1239
 
 ### Confusion Matrix
 The confusion matrix helps to understand where the model is confusing different tumor types.
@@ -61,6 +61,7 @@ Incorporating 3D volumetric MRI data
 Training on larger, multi-institutional datasets
 
 Exploring more advanced attention-based architectures such as CBAM
+
 
 
 
