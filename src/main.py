@@ -65,15 +65,16 @@ def main():
         overlay_image_jet, overlay_image_hot = cam.heatmap_overlay(image, target_class=label)
 
         prediction = model(image.unsqueeze(0))
-        plt.title(f'Label: {label}, Model Prediction: {prediction}')
-        # Red Heat Map
         plt.figure(figsize=(10, 10))
+        plt.title(f'Label: {label}, Model Prediction: {prediction.argmax(dim=1)}')
+        # Red Heat Map
         plt.subplot(1, 2, 1)
         plt.imshow(overlay_image_jet)
 
         # Blue Heat Map
         plt.subplot(1, 2, 2)
         plt.imshow(overlay_image_hot)
+
     # Visualizing Feature Maps
     # num_layers = 0
     # conv_layers = []
