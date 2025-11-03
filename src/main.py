@@ -37,14 +37,19 @@ def main():
     random.seed(51)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # Hyperparameters
-    epochs = 50
+    epochs = 39
     batch_size = 16
-    learning_rate = 0.0001
-    weight_decay = 0.003
+    learning_rate = 0.00005
+    weight_decay = 0.005
     dropout_probability = 0.3
     model = Model(dropout_probability).to(device)
 
     print(model)
+    print(f'Epochs: {epochs}')
+    print(f'Batch Size: {batch_size}')
+    print(f'Learning Rate: {learning_rate}')
+    print(f'Weight Decay: {weight_decay}')
+    print(f'Dropout Probability: {dropout_probability}')
     train(epochs, batch_size, learning_rate, weight_decay, model)
 
     _, _, _, _, X_test, y_test = get_data_split()
@@ -57,10 +62,18 @@ def main():
         print(f'Label : {label}')
         image = image.to(device)
         # GradCAM Image
-        heatmap_image = cam.heatmap_overlay(image, target_class=label)
+        overlay_image_jet, overlay_image_hot = cam.heatmap_overlay(image, target_class=label)
 
+        prediction = model(image.unsqueeze(0))
+        plt.title(f'Label: {label}, Model Prediction: {prediction}')
+        # Red Heat Map
+        plt.figure(figsize=(10, 10))
+        plt.subplot(1, 2, 1)
+        plt.imshow(overlay_image_jet)
 
-
+        # Blue Heat Map
+        plt.subplot(1, 2, 2)
+        plt.imshow(overlay_image_hot)
     # Visualizing Feature Maps
     # num_layers = 0
     # conv_layers = []

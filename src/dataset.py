@@ -2,18 +2,15 @@
 import glob
 import os.path
 import re
-import sys
-
-import cv2
-import matplotlib.pyplot as plt
-import torch
-from IPython.core.pylabtools import figsize
-from sklearn.model_selection import train_test_split, GroupShuffleSplit
-from torch.utils.data import Dataset
-from torchvision import transforms
-import numpy as np
 from collections import defaultdict
 import imutils
+# Image Preprocessing
+from torch.utils.data import Dataset
+from torchvision import transforms
+import cv2
+import torch
+from sklearn.model_selection import train_test_split, GroupShuffleSplit
+import numpy as np
 
 
 # Download latest version
@@ -22,7 +19,6 @@ import imutils
 # Normal Image Size is 224x224
 # Image Size Varies
 # 7 images per patient. First image is original while the rest are augmented
-# Every 7 images is the original
 
 # Gets the File Number in order to sort numerically
 def extract_number(file_name):
@@ -225,10 +221,7 @@ class MRI(Dataset):
         # Resize, Adjust Tensor Shape, Min-Max Normalization, Z-Score Normalization
         self.transform = transforms.Compose([transforms.ToPILImage(),
                                              transforms.Resize((224, 224)),
-                                             # Small shifts
-                                             # transforms.RandomAffine(degrees=5, translate=(0.05, 0.05), fill=0),
                                              transforms.ToTensor()
-                                             # transforms.Normalize(mean=[0.19], std=[0.19])
                                              ])
         self.testing = testing
 

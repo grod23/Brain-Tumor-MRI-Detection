@@ -3,7 +3,6 @@ import torch.nn as nn
 # Gaussian Kernel
 from scipy.stats import multivariate_normal
 import numpy as np
-import matplotlib.pyplot as plt
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -54,8 +53,8 @@ class Spatial_Gate(nn.Module):
     def __init__(self):
         super(Spatial_Gate, self).__init__()
         # Gaussian Center Weight Map
-        self.center_weight = gaussian_weight_map(size=224, sigma=0.2).to(device)
-        self.bias_strength = 10.0
+        self.center_weight = gaussian_weight_map(size=224, sigma=0.1).to(device)
+        self.bias_strength = 8.0
         self.kernel_size = 7
         self.compress = Channel_Pool()
         self.spatial = nn.Conv2d(in_channels=2, out_channels=1, kernel_size=self.kernel_size, padding=(self.kernel_size-1) // 2, bias=False)

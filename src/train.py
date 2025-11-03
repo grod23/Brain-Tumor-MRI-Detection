@@ -1,3 +1,11 @@
+# Python Files
+from dataset import MRI, get_data_split
+import argparse
+# Neural Network Libraries
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader
+from torch.optim import AdamW, lr_scheduler
 # Graphing Library
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -5,16 +13,6 @@ import pandas as pd
 # Evaluation Metrics
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
-# Neural Network Libraries
-import torch
-import torch.nn as nn
-from torch.utils.data import DataLoader
-from torch.optim import AdamW, lr_scheduler
-# Python Files
-from dataset import MRI, get_data_split
-import argparse
-import sys
-import os
 
 
 def train(epochs, batch_size, learning_rate, weight_decay, model):
@@ -163,6 +161,8 @@ def train(epochs, batch_size, learning_rate, weight_decay, model):
     plt.show()
     # Classification Report
     print(report)
+    print(f'Lowest Validation Loss: {min(val_loss_track)}')
+    print(f'Lowest Training Loss: {min(loss_track)}')
 
 # if __name__ == '__main__':
 #     # Sagemaker Compatible

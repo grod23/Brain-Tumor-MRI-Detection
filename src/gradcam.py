@@ -99,26 +99,28 @@ class GradCAM:
         plt.title("Before ColorMap MRI Image")
         plt.axis('off')
 
-        self.heat_map = cv2.applyColorMap(self.heat_map, cv2.COLORMAP_HOT)
+        self.heat_map_hot = cv2.applyColorMap(self.heat_map, cv2.COLORMAP_HOT)
+        self.heat_map_jet = cv2.applyColorMap(self.heat_map, cv2.COLORMAP_JET)
 
         # Heat Map image
         plt.subplot(1, 4, 3)
-        plt.imshow(self.heat_map)
+        plt.imshow(self.heat_map_hot)
         plt.title("Heatmap MRI Image")
         plt.axis('off')
 
-        overlay_image = cv2.addWeighted(image, alpha, self.heat_map, 1 - alpha, 0)
-
+        overlay_image_jet = cv2.addWeighted(image, alpha, self.heat_map_jet, 1 - alpha, 0)
+        overlay_image_hot = cv2.addWeighted(image, alpha, self.heat_map_hot, 1 - alpha, 0)
         # Overlay image
         plt.subplot(1, 4, 4)
-        plt.imshow(overlay_image)
+        plt.imshow(overlay_image_hot)
         plt.title("Overlay MRI Image")
         plt.axis('off')
+
 
         plt.tight_layout()
         plt.show()
 
-        return overlay_image
+        return overlay_image_jet, overlay_image_hot
 
 
 
