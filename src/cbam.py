@@ -53,7 +53,7 @@ class Spatial_Gate(nn.Module):
     def __init__(self):
         super(Spatial_Gate, self).__init__()
         # Gaussian Center Weight Map
-        self.center_weight = gaussian_weight_map(size=224, sigma=0.1).to(device)
+        self.center_weight = gaussian_weight_map(size=224, sigma=0.15).to(device)
         self.bias_strength = 8.0
         self.kernel_size = 7
         self.compress = Channel_Pool()
