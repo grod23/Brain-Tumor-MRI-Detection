@@ -51,6 +51,10 @@ Interpretability and trust are crucial for an impactful machine learning model, 
 ### Confusion Matrix
 The confusion matrix helps to understand where the model is confusing different tumor types.
 
+
+![Confusion Matrix](Model_Report_Images/Screenshot%202025-11-02%20174657.png)
+
+
 ### Conclusion
 This project demonstrates the potential of deep learning models to assist in the early and automated diagnosis of brain tumors using MRI scans. With the use of convolutional neural networks and Grad-CAM for interpretability, the model not only achieves strong performance metrics but also offers transparency in its decision-making.
 
@@ -60,7 +64,8 @@ Incorporating 3D volumetric MRI data
 
 Training on larger, multi-institutional datasets
 
-Exploring more advanced attention-based architectures such as CBAM
+Preprocessing utilizing skull-stripping. 
+
 
 
 
