@@ -33,6 +33,13 @@ python test.py
 ### Sample MRI Scans: Before and After Preprocessing
 MRI images undergo preprocessing to normalize input, resize shapes, equalize histograms, and apply augmentations. 
 
+<table>
+  <tr>
+    <td><img src="Model_Report_Images/Meningioma_original.png" alt="Before Processing" width="300"></td>
+    <td><img src="Model_Report_Images/Meningioma_processed.png" alt="After Processing" width="300"></td>
+  </tr>
+</table>
+
 ### Train-Validation Loss
 
 <img src="Model_Report_Images/Train_Val_Loss.png" width="600">
@@ -82,6 +89,7 @@ Incorporating 3D volumetric MRI data
 Training on larger, multi-institutional datasets
 
 Preprocessing utilizing skull-stripping. 
+
 
 
 
