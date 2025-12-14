@@ -6,7 +6,7 @@ As machine learning continues to expand its role in healthcare, the demand for *
 
 - **Glioma**
 - **Meningioma**
-- **Pituitary Tumors**
+- **Pituitary**
 
 By leveraging deep learning techniques, this project aims to support early diagnosis and enhance clinical decision-making in neuro-oncology.
 
@@ -89,6 +89,7 @@ Incorporating 3D volumetric MRI data
 Training on larger, multi-institutional datasets
 
 Preprocessing utilizing skull-stripping. 
+
 
 
 
