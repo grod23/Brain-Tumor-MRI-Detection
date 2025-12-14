@@ -28,7 +28,7 @@ pip install -r requirements.txt
 ```
 ### Run Script
 ```
-python test.py
+python main.py
 ```
 ### Sample MRI Scans: Before and After Preprocessing
 MRI images undergo preprocessing to normalize input, resize shapes, equalize histograms, and apply augmentations. 
@@ -89,6 +89,7 @@ Incorporating 3D volumetric MRI data
 Training on larger, multi-institutional datasets
 
 Preprocessing utilizing skull-stripping. 
+
 
 
 
