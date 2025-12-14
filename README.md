@@ -33,8 +33,20 @@ python test.py
 ### Sample MRI Scans: Before and After Preprocessing
 MRI images undergo preprocessing to normalize input, resize shapes, equalize histograms, and apply augmentations. 
 
+### Train-Validation Loss
+
+<img src="Model_Report_Images/Train_Val_Loss.png" width="600">
+
+
 ### Grad-CAM Visualization
 Interpretability and trust are crucial for an impactful machine learning model, especially in healthcare. Professionals must understand where and why a model is making predictions. To ensure interpretability, Grad-CAM (Gradient-weighted Class Activation Mapping) is used to visualize which regions of the MRI the model focuses on when making a prediction.
+
+<p align="center">
+  <img src="Model_Report_Images/01_pred_PIT.png" width="400">
+  <img src="Model_Report_Images/04_pred_GLI.png" width="400">
+  <img src="Model_Report_Images/07_pred_MENG.png" width="400">
+</p>
+
 
 ### Classification Report
                   precision    recall  f1-score   support
@@ -51,8 +63,7 @@ Interpretability and trust are crucial for an impactful machine learning model, 
 ### Confusion Matrix
 The confusion matrix helps to understand where the model is confusing different tumor types.
 
-
-![Confusion Matrix](Model_Report_Images/Screenshot%202025-11-02%20174657.png)
+<img src="Model_Report_Images/Confusion_Matrix.png" width="600">
 
 
 ### Conclusion
@@ -65,6 +76,7 @@ Incorporating 3D volumetric MRI data
 Training on larger, multi-institutional datasets
 
 Preprocessing utilizing skull-stripping. 
+
 
 
 
