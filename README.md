@@ -49,15 +49,15 @@ MRI images undergo preprocessing to normalize input, resize shapes, equalize his
 Interpretability and trust are crucial for an impactful machine learning model, especially in healthcare. Professionals must understand where and why a model is making predictions. To ensure interpretability, Grad-CAM (Gradient-weighted Class Activation Mapping) is used to visualize which regions of the MRI the model focuses on when making a prediction.
 
 <p align="center">
-  <img src="Model_Report_Images/01_pred_PIT.png" width="500"><br>
+  <img src="Model_Report_Images/01_pred_PIT.png" width="700"><br>
   <b>Meningioma Tumor, Predicted: Pituitary</b>
 </p>
 <p align="center">
-  <img src="Model_Report_Images/04_pred_GLI.png" width="500"><br>
+  <img src="Model_Report_Images/04_pred_GLI.png" width="700"><br>
   <b>Glioma Tumor, Predicted: Glioma</b>
 </p>
 <p align="center">
-  <img src="Model_Report_Images/07_pred_MENG.png" width="500"><br>
+  <img src="Model_Report_Images/07_pred_MENG.png" width="700"><br>
   <b>Meningioma Tumor, Predicted: Meningioma</b>
 </p>
 
@@ -89,6 +89,7 @@ Incorporating 3D volumetric MRI data
 Training on larger, multi-institutional datasets
 
 Preprocessing utilizing skull-stripping. 
+
 
 
 
