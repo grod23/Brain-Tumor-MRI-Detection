@@ -72,50 +72,47 @@ class GradCAM:
         cam = cam.squeeze().cpu().detach().numpy()
         cam = np.uint8(cam * 255)
 
-        plt.figure(figsize=(10, 10))
-        plt.imshow(cam)
-        plt.title(f'GradCAM, Class: {target_class} Prediction: {prediction.argmax()}')
-        plt.show()
+        # plt.figure(figsize=(10, 10))
+        # plt.imshow(cam)
+        # plt.title(f'GradCAM, Class: {target_class} Prediction: {prediction.argmax()}')
+        # plt.show()
 
         self.heat_map = cam # Shape: (224, 224)
 
+        return prediction, target_class
+
     def heatmap_overlay(self, image, target_class, alpha=0.4):
-        self.generate(image, target_class)
+        # Stores heat map in class and returns (predictions, target_class)
+        prediction, target = self.generate(image, target_class)
+        prediction = prediction.argmax().item()
         # Image and Heatmap must be numpy array of shape [224, 224, 3]
         image = (image.permute(1, 2, 0).cpu().detach().numpy() * 255).astype(np.uint8)
-
-        # Original image
-        # plt.figure(figsize=(10, 10))
-        # plt.subplot(1, 4, 1)
-        # plt.imshow(image)
-        # plt.title("Original MRI Image")
-        # plt.axis('off')
-
         image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
-
-        # Original image
-        # plt.subplot(1, 4, 2)
-        # plt.imshow(image)
-        # plt.title("Before ColorMap MRI Image")
-        # plt.axis('off')
 
         self.heat_map_hot = cv2.applyColorMap(self.heat_map, cv2.COLORMAP_HOT)
         self.heat_map_jet = cv2.applyColorMap(self.heat_map, cv2.COLORMAP_JET)
 
-        # Heat Map image
-        # plt.subplot(1, 4, 3)
-        # plt.imshow(self.heat_map_hot)
-        # plt.title("Heatmap MRI Image")
-        # plt.axis('off')
-
         overlay_image_jet = cv2.addWeighted(image, alpha, self.heat_map_jet, 1 - alpha, 0)
         overlay_image_hot = cv2.addWeighted(image, alpha, self.heat_map_hot, 1 - alpha, 0)
-        # Overlay image
-        # plt.subplot(1, 4, 4)
-        # plt.imshow(overlay_image_hot)
-        # plt.title("Overlay MRI Image")
-        # plt.axis('off')
 
+        # Display Missed Predictions
+        if prediction != target and prediction == 0:
+            plt.figure(figsize=(10, 10))
+            plt.subplot(1, 3, 1)
+            plt.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
+            plt.imshow(image)
+            plt.title('Original Image')
+
+            # Red Heat Map
+            plt.subplot(1, 3, 2)
+            plt.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
+            plt.imshow(overlay_image_jet)
+
+            plt.title(f'Label: {target}, Model Prediction: {prediction}')
+            # Blue Heat Map
+            plt.subplot(1, 3, 3)
+            plt.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
+            plt.imshow(overlay_image_hot)
 
         plt.tight_layout()
         plt.show()

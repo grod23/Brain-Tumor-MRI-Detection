@@ -71,33 +71,36 @@ def main():
     mri = MRI(X_test, y_test)
     cam = GradCAM(model, target_layer_name='cnn.13')
 
-    for i in range(50):
+    for i in range(1238):
         random_index = random.randint(1, 1238)
         image, label = mri.__getitem__(random_index)
         print(f'Label : {label}')
         image = image.to(device)
         # GradCAM Image
         overlay_image_jet, overlay_image_hot = cam.heatmap_overlay(image, target_class=label)
-
-        # Keep both model and input on the same device
-        with torch.no_grad():
-            prediction = model(image.unsqueeze(0))
-
-        plt.figure(figsize=(10, 10))
-        image = image.squeeze().cpu().detach().numpy()
-        plt.subplot(1, 3, 1)
-        plt.imshow(image)
-        plt.title('Original Image')
-
-        # Red Heat Map
-        plt.subplot(1, 3, 2)
-        plt.imshow(overlay_image_jet)
-
-        plt.title(f'Label: {label}, Model Prediction: {prediction.argmax(dim=1).item()}')
-
-        # Blue Heat Map
-        plt.subplot(1, 3, 3)
-        plt.imshow(overlay_image_hot)
+        #
+        # # Keep both model and input on the same device
+        # with torch.no_grad():
+        #     prediction = model(image.unsqueeze(0))
+        #
+        # plt.figure(figsize=(10, 10))
+        # image = image.squeeze().cpu().detach().numpy()
+        # plt.subplot(1, 3, 1)
+        # plt.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
+        # plt.imshow(image)
+        # plt.title('Original Image')
+        #
+        # # Red Heat Map
+        # plt.subplot(1, 3, 2)
+        # plt.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
+        # plt.imshow(overlay_image_jet)
+        #
+        # plt.title(f'Label: {label}, Model Prediction: {prediction.argmax(dim=1).item()}')
+        #
+        # # Blue Heat Map
+        # plt.subplot(1, 3, 3)
+        # plt.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
+        # plt.imshow(overlay_image_hot)
 
     # Visualizing Feature Maps
     # num_layers = 0

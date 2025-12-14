@@ -121,6 +121,8 @@ def train(epochs, batch_size, learning_rate, weight_decay, model):
     # Accuracy
     test_correct = 0
     test_total = 0
+    # Store falsely predicted images
+    missed_predictions = []
     # Classification Report
     y_true = []
     y_pred = []
@@ -139,6 +141,10 @@ def train(epochs, batch_size, learning_rate, weight_decay, model):
 
             # Total Accuracy
             test_correct += (y_prediction.argmax(dim=1)==y_test).sum().item()
+
+            # Missed Predictions
+            # missed_predictions.append()
+
             test_total += y_test.size(0)
 
     # Evaluation Metrics

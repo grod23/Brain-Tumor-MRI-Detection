@@ -10,7 +10,7 @@ class Model(nn.Module):
         # Image Shape: (Batch Size, Channels, Height, Width) = (16, 1, 224, 224) Gray Scale.
         self.cnn = nn.Sequential(
             # Block 1
-            nn.Conv2d(in_channels=1, out_channels=16, kernel_size=3, stride=1),
+            nn.Conv2d(in_channels=1, out_channels=16, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(16),
             #nn.SiLU(),
             nn.ReLU(),
