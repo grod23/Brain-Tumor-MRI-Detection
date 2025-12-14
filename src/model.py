@@ -1,7 +1,6 @@
 import torch.nn as nn
 from cbam import CBAM
 
-# Highest Validation Accuracy 89%
 class Model(nn.Module):
     def __init__(self, dropout_probability):
         super(Model, self).__init__()
@@ -55,12 +54,4 @@ class Model(nn.Module):
         X = self.fc_layer(X)
         return X
 
-
-# Model Formats:
-
-# UNET:
-# Designed for biomedical imaging with small datasets
-
-# YOLOv8(YOU ONLY LOOK ONCE)
-# Strong object detection
 

@@ -12,6 +12,7 @@ import torch
 from sklearn.model_selection import train_test_split, GroupShuffleSplit
 import numpy as np
 
+import matplotlib.pyplot as plt
 
 # Download latest version
 # path = kagglehub.dataset_download("mohammadhossein77/brain-tumors-dataset")
@@ -230,18 +231,13 @@ class MRI(Dataset):
 
     def __getitem__(self, index):
         image_path = self.image_paths[index]
-
         label = self.labels[index]
-
         # Load Image on Demand
         image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-
         # Crop Image
         image = crop_image(image, image_path)
-
         # Normalize and Resize
         image = self.transform(image)
-
         return image, label
 
     # Data Augmentation already included in DataSet:

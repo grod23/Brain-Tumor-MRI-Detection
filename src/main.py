@@ -32,21 +32,6 @@ import matplotlib.pyplot as plt
 # Outputs: 4 - Normal, Glioma, Meningioma, Pituitary
 
 def main():
-    # Test Accuracy: 0.8886198547215496
-    #               precision    recall  f1-score   support
-    #
-    #            0       0.94      0.94      0.94       164
-    #            1       0.90      0.87      0.88       373
-    #            2       0.84      0.83      0.84       371
-    #            3       0.90      0.95      0.93       331
-    #
-    #     accuracy                           0.89      1239
-    #    macro avg       0.90      0.90      0.90      1239
-    # weighted avg       0.89      0.89      0.89      1239
-    #
-    # Lowest Validation Loss: 0.3206278576921576
-    # Lowest Training Loss: 0.2644623552951939
-
     torch.manual_seed(51)
     np.random.seed(51)
     random.seed(51)

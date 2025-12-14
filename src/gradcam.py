@@ -72,11 +72,6 @@ class GradCAM:
         cam = cam.squeeze().cpu().detach().numpy()
         cam = np.uint8(cam * 255)
 
-        # plt.figure(figsize=(10, 10))
-        # plt.imshow(cam)
-        # plt.title(f'GradCAM, Class: {target_class} Prediction: {prediction.argmax()}')
-        # plt.show()
-
         self.heat_map = cam # Shape: (224, 224)
 
         return prediction, target_class
